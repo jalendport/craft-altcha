@@ -1,0 +1,143 @@
+{# @var plugin \jalendport\altcha\Altcha #}
+{# @var settings \jalendport\altcha\models\Settings #}
+
+{% extends 'altcha/_settings/_layout' %}
+
+{% import '_includes/forms.twig' as forms %}
+{% from 'altcha/_settings/_macros' import configWarning %}
+
+{% block settingsHtml %}
+
+	{{ forms.selectField({
+		label: 'Verification Method' | t('altcha'),
+		instructions: 'Select the verification method Altcha uses.' | t('altcha'),
+		id: 'verificationMethod',
+		name: 'verificationMethod',
+		options: [
+			{
+				label: 'Custom Server Integration',
+				value: 'custom',
+			},
+			{
+				label: 'ALTCHA Sentinel',
+				value: 'sentinel',
+			}
+		],
+		value: settings.verificationMethod,
+		warning: configWarning('verificationMethod', 'altcha'),
+	}) }}
+
+	<div id="custom-options" {% if settings.verificationMethod != 'custom' %}class="hidden"{% endif %}>
+
+		{{ forms.autosuggestField({
+			label: 'HMAC Key' | t('altcha'),
+			instructions: 'A unique key used to create a signature based on the challenge. Use `php craft altcha/generate-hmac-key` to create one.' | t('altcha'),
+			suggestEnvVars: true,
+			name: 'hmacKey',
+			value: settings.hmacKey,
+			required: true,
+			warning: configWarning('hmacKey'),
+			tip: 'This ought to be set to an environment variable.'|t('altcha') ~ ' ' ~ tag('a', {
+				href: 'https://craftcms.com/docs/5.x/configure.html#control-panel-settings',
+				class: 'go',
+				text: 'Learn more'|t('app'),
+			}),
+			errors: settings.getErrors('hmacKey'),
+		}) }}
+
+	</div>
+
+	<div id="sentinel-options" {% if settings.verificationMethod != 'sentinel' %}class="hidden"{% endif %}>
+
+		{{ forms.autosuggestField({
+			label: 'Sentinel Endpoint URL' | t('altcha'),
+			instructions: 'This is your Sentinel instance’s base URL with `/v1/challenge` path.' | t('altcha'),
+			suggestEnvVars: true,
+			name: 'sentinelEndpointUrl',
+			value: settings.sentinelEndpointUrl,
+			required: true,
+			warning: configWarning('sentinelEndpointUrl'),
+			errors: settings.getErrors('sentinelEndpointUrl'),
+		}) }}
+
+		{{ forms.autosuggestField({
+			label: 'Sentinel API Key' | t('altcha'),
+			instructions: 'A unique key authenticating your application with Sentinel.' | t('altcha'),
+			suggestEnvVars: true,
+			name: 'sentinelApiKey',
+			value: settings.sentinelApiKey,
+			required: true,
+			warning: configWarning('sentinelApiKey'),
+			tip: 'This ought to be set to an environment variable.'|t('altcha') ~ ' ' ~ tag('a', {
+				href: 'https://craftcms.com/docs/5.x/configure.html#control-panel-settings',
+				class: 'go',
+				text: 'Learn more'|t('app'),
+			}),
+			errors: settings.getErrors('sentinelApiKey'),
+		}) }}
+
+		{{ forms.autosuggestField({
+			label: 'Sentinel API Secret' | t('altcha'),
+			instructions: 'A unique secret used to create a signature based on the challenge.' | t('altcha'),
+			suggestEnvVars: true,
+			name: 'sentinelApiSecret',
+			value: settings.sentinelApiSecret,
+			required: true,
+			warning: configWarning('sentinelApiSecret'),
+			tip: 'This ought to be set to an environment variable.'|t('altcha') ~ ' ' ~ tag('a', {
+				href: 'https://craftcms.com/docs/5.x/configure.html#control-panel-settings',
+				class: 'go',
+				text: 'Learn more'|t('app'),
+			}),
+			errors: settings.getErrors('sentinelApiSecret'),
+		}) }}
+
+	</div>
+
+	<hr>
+
+	{{ forms.selectField({
+		label: 'Complexity' | t('altcha'),
+		instructions: 'Select the complexity of the Altcha mechanism. Learn more [here](https://altcha.org/docs/v2/complexity/).' | t('altcha'),
+		id: 'complexity',
+		name: 'complexity',
+		options: [
+			{
+				label: 'Low',
+				value: 1000,
+			},
+			{
+				label: 'Medium',
+				value: 50000,
+			},
+			{
+				label: 'High',
+				value: 100000,
+			}
+		],
+		value: settings.complexity,
+		warning: configWarning('complexity', 'altcha'),
+	}) }}
+
+	{{ forms.lightswitchField({
+		label: 'Register Widget JS' | t('altcha'),
+		instructions: 'Enable this option to register the Altcha widget JS from a CDN on your frontend. Disable if you’re already importing the Altcha script into your frontend’s JS.' | t('altcha'),
+		name: 'registerWidgetJs',
+		on: settings.registerWidgetJs,
+		warning: configWarning('registerWidgetJs', 'altcha'),
+	}) }}
+
+{% endblock %}
+
+{% js on ready %}
+	(function() {
+		const verificationMethod = document.getElementById('settings-verificationMethod');
+		const customOptions = document.getElementById('settings-custom-options');
+		const sentinelOptions = document.getElementById('settings-sentinel-options');
+
+		verificationMethod.addEventListener('change', function() {
+			customOptions.classList.toggle('hidden', this.value !== 'custom');
+			sentinelOptions.classList.toggle('hidden', this.value !== 'sentinel');
+		});
+	})();
+{% endjs %}

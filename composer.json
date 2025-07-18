@@ -1,0 +1,40 @@
+{
+  "name": "jalendport/craft-altcha",
+  "description": "Integrate Altcha's privacy-first spam protection into your forms.",
+  "type": "craft-plugin",
+  "license": "mit",
+  "support": {
+    "email": "hello@jalendport.com",
+    "issues": "https://github.com/jalendport/craft-altcha/issues?state=open",
+    "source": "https://github.com/jalendport/craft-altcha",
+    "docs": "https://github.com/jalendport/craft-altcha",
+    "rss": "https://github.com/jalendport/craft-altcha/releases.atom"
+  },
+  "require": {
+    "php": ">=8.2",
+    "altcha-org/altcha": "^1.1.2",
+    "craftcms/cms": "^5.0.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "jalendport\\altcha\\": "src/"
+    }
+  },
+  "extra": {
+    "handle": "altcha",
+    "name": "Altcha",
+    "developer": "Jalen Davenport",
+    "documentationUrl": "https://github.com/jalendport/craft-altcha",
+    "class": "jalendport\\altcha\\Altcha"
+  },
+  "config": {
+    "sort-packages": true,
+    "platform": {
+      "php": "8.2"
+    },
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{% requireAdmin false %}
+
+{% extends '_layouts/cp' %}
+
+{% set plugin = variables.plugin %}
+
+{% set title = plugin.name %}
+{% set docTitle = title ~ ' - ' ~ "Plugins"|t('app') %}
+{% set readOnly = readOnly ?? false %}
+{% set fullPageForm = not readOnly %}
+
+{% set crumbs = [
+	{ label: "Settings"|t('app'), url: url('settings') },
+	{ label: "Plugins"|t('app'), url: url('settings/plugins') },
+] %}
+
+{% set selectedTab = selectedTab ?? craft.app.request.getSegment(3) ?? 'general' %}
+
+{% block actionButton %}
+	<div></div>
+{% endblock %}
+
+{% block sidebar %}
+	<nav class="altcha-settings-tabs">
+		<ul>
+			{% for handle, item in variables.navItems %}
+				{% if item.heading is defined %}
+					<li class="heading"><span>{{ item.heading }}</span></li>
+				{% else %}
+					<li>
+						<a href="{{ url('settings/altcha/' ~ handle) }}" {% if handle == selectedTab %}class="sel"{% endif %}>
+							{{ item.title }}
+						</a>
+					</li>
+				{% endif %}
+			{% endfor %}
+		</ul>
+	</nav>
+{% endblock %}
+
+{% set settings = variables.settings %}
+
+{% block content %}
+
+	{% if variables.navItems[selectedTab].title %}
+		<h2>{{ variables.navItems[selectedTab].title }}</h2>
+	{% endif %}
+
+	{% if not readOnly %}
+		{{ actionInput('plugins/save-plugin-settings') }}
+		{{ hiddenInput('pluginHandle', plugin.handle) }}
+	{% endif %}
+
+	{% namespace 'settings' %}
+		{% block settingsHtml %}
+		{% endblock %}
+	{% endnamespace %}
+
+	<hr>
+
+	<button type="submit" class="btn submit">{{ 'Save'|t('app') }}</button>
+
+{% endblock %}
