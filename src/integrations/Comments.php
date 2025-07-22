@@ -26,8 +26,6 @@ class Comments extends Component
 		// Verify the solution
 		$verified = Altcha::getInstance()->altchaService->verifySolution($payload);
 
-		$verified = false;
-
 		if (!$verified) {
 			$comment->status = Comment::STATUS_SPAM;
 		}
