@@ -32,7 +32,9 @@
     "altcha-org/altcha": "^2.0"
   },
   "require-dev": {
+    "craftcms/contact-form": "^3.0",
     "craftcms/ecs": "dev-main",
+    "craftcms/guest-entries": "^4.0",
     "craftcms/phpstan": "dev-main",
     "craftcms/rector": "dev-main",
     "pestphp/pest": "^3.0",
