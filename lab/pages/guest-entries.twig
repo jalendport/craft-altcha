@@ -1,0 +1,39 @@
+{% set entries = craft.entries.section('labArticles').orderBy('dateCreated desc').limit(5).all() %}
+
+<h2>Guest Entries</h2>
+
+<p class="hint">
+	Seeded state: integration on, the <code>labArticles</code> section open to
+	guest submissions. Like Contact Form, a failed verification is flagged as
+	<em>spam</em> &mdash; the visitor still gets the success response &mdash; so the entry
+	list below is the source of truth.
+</p>
+
+<ol class="hint">
+	<li>Solve the widget, submit &mdash; the new entry appears in the list below.</li>
+	<li>Submit without touching the widget &mdash; same success response, but <strong>no new entry appears</strong>: the save was spam-flagged.</li>
+</ol>
+
+<form method="post">
+	{{ csrfInput() }}
+	{{ actionInput('guest-entries/save') }}
+	{{ redirectInput('lab-test?page=guest-entries') }}
+	{{ hiddenInput('sectionHandle', 'labArticles') }}
+
+	<label for="ge-title">Title</label>
+	<input id="ge-title" name="title" type="text" value="Guest entry {{ random(1000, 9999) }}">
+
+	<label for="ge-summary">Summary</label>
+	<input id="ge-summary" name="fields[labSummary]" type="text" value="Submitted through the smoke lab.">
+
+	{{ craft.altcha.renderWidget() }}
+
+	<p><button type="submit">Submit entry</button></p>
+</form>
+
+<h3>Latest entries in labArticles</h3>
+<ul>
+	{% for entry in entries %}
+		<li>#{{ entry.id }} &mdash; {{ entry.title }} ({{ entry.dateCreated|date('H:i:s') }})</li>
+	{% endfor %}
+</ul>

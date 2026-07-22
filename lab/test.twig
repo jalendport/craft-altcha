@@ -1,83 +1,64 @@
 {% set plugin = craft.app.plugins.getPlugin('altcha') %}
 {% set settings = plugin ? plugin.settings : null %}
 
-{# Everything below is computed server-side so `curl -sf <url>/lab-test` can
-   assert on the PASS/FAIL markers without running a browser. #}
-{% set hmacKey = settings ? settings.hmacKey : '' %}
-{% set hmacConfigured = hmacKey is not empty and hmacKey|slice(0, 1) != '$' %}
-{% set challenge = plugin ? plugin.altcha.createChallenge() : null %}
-{% set challengeUrl = plugin ? craft.altcha.challengeUrl : '' %}
-{% set widget = plugin ? craft.altcha.renderWidget() ~ '' : '' %}
-{% set customWidget = plugin ? craft.altcha.renderWidget({
-	name: 'labAltcha',
-	display: 'bar',
-}) ~ '' : '' %}
-
-{# The lab instance serves URLs through index.php, so the challenge URL carries
-   the action path as a query param rather than a /actions/… path segment. #}
-{% set checks = [
-	{ label: 'plugin installed', pass: plugin is not null, actual: plugin ? plugin.version : 'not installed' },
-	{ label: 'settings model loaded', pass: settings is not null, actual: settings ? settings|length ~ ' settings' : 'none' },
-	{ label: 'hmacKey configured (value not printed)', pass: hmacConfigured, actual: hmacConfigured ? hmacKey|length ~ ' chars' : 'unset or unresolved env ref' },
-	{ label: 'config/altcha.php applied (complexity 1000)', pass: settings and settings.complexity == 1000, actual: settings ? settings.complexity : 'n/a' },
-	{ label: 'challengeExpiryMinutes from config file', pass: settings and settings.challengeExpiryMinutes == 20, actual: settings ? settings.challengeExpiryMinutes : 'n/a' },
-	{ label: 'craft.altcha.challengeUrl points at the action', pass: 'actions/altcha/challenge' in challengeUrl, actual: challengeUrl },
-	{ label: 'createChallenge() issues a signed challenge', pass: challenge is not null and challenge.signature is not empty, actual: challenge ? challenge.parameters.algorithm ~ ', cost ' ~ challenge.parameters.cost ~ ', signed' : 'null' },
-	{ label: 'renderWidget() emits <altcha-widget', pass: '<altcha-widget' in widget, actual: widget|length ~ ' chars' },
-	{ label: 'renderWidget() sets a challenge attribute', pass: 'challenge="' in widget, actual: 'challenge="' in widget ? 'yes' : 'no' },
-	{ label: 'renderWidget() sets name="altcha"', pass: 'name="altcha"' in widget, actual: 'name="altcha"' in widget ? 'yes' : 'no' },
-	{ label: 'renderWidget() options override the name', pass: 'name="labAltcha"' in customWidget, actual: 'name="labAltcha"' in customWidget ? 'yes' : 'no' },
-	{ label: 'renderWidget() options set display="bar"', pass: 'display="bar"' in customWidget, actual: 'display="bar"' in customWidget ? 'yes' : 'no' },
-] %}
-{% set failures = checks|filter(check => not check.pass)|length %}
+{# /lab-test is the only route the lab registers, so the integration pages hang
+   off it as ?page=… includes rendered from this same template root. #}
+{% set pages = {
+	'formie': 'Formie',
+	'comments': 'Comments',
+	'contact-form': 'Contact Form',
+	'users': 'Users',
+	'guest-entries': 'Guest Entries',
+	'blanket': 'Blanket mode',
+} %}
+{% set page = craft.app.request.getQueryParam('page') %}
+{% set page = page in pages|keys ? page : null %}
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Altcha smoke test</title>
+		<title>Altcha smoke test{{ page ? ' — ' ~ pages[page] }}</title>
+		<style>
+			body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 52rem; padding: 0 1rem; }
+			nav a { margin-right: 1rem; }
+			form { border: 1px solid #ccc; padding: 1rem; margin: 1rem 0; }
+			fieldset { border: none; padding: 0; margin: 0 0 .75rem; }
+			label { display: block; margin: .5rem 0 .25rem; }
+			.flash-notice { background: #e6f6e6; border: 1px solid #4a4; padding: .5rem 1rem; }
+			.flash-error { background: #fbeaea; border: 1px solid #c44; padding: .5rem 1rem; }
+			.errors { color: #c00; }
+			.hint { color: #555; font-size: .9rem; }
+			table { border-collapse: collapse; }
+			th, td { border: 1px solid #ccc; padding: .4rem .6rem; text-align: left; }
+			code { background: #f4f4f4; padding: .1rem .3rem; }
+			pre { background: #f4f4f4; padding: .75rem; overflow-x: auto; }
+		</style>
 	</head>
 	<body>
 		<h1>Altcha smoke test</h1>
 
-		<h2>Verdict</h2>
-		<p id="verdict">{{ failures == 0 ? 'ALL PASS' : failures ~ ' FAILURES' }}</p>
+		<nav>
+			<a href="{{ url('lab-test') }}">Index</a>
+			{% for handle, label in pages %}
+				<a href="{{ url('lab-test', { page: handle }) }}"{% if page == handle %} aria-current="page"{% endif %}>{{ label }}</a>
+			{% endfor %}
+		</nav>
 
-		<h2>Checks</h2>
-		<table border="1" cellpadding="6">
-			<thead>
-				<tr>
-					<th>Check</th>
-					<th>Actual</th>
-					<th>Result</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for check in checks %}
-					<tr>
-						<td>{{ check.label }}</td>
-						<td>{{ check.actual }}</td>
-						<td>{{ check.pass ? 'PASS' : 'FAIL' }}</td>
-					</tr>
-				{% endfor %}
-			</tbody>
-		</table>
+		{# Craft's controllers flash their outcomes; surface them on every page so
+		   each form's redirect-back lands somewhere that says what happened. Keys
+		   and shapes vary by controller, so take everything and normalize. #}
+		{% for type, flashes in craft.app.session.getAllFlashes(true) %}
+			{% for flash in flashes is iterable ? flashes : [flashes] %}
+				{% set message = flash.message is defined ? flash.message : flash %}
+				<p class="{{ 'error' in type ? 'flash-error' : 'flash-notice' }}">{{ message is iterable ? message|json_encode : message }}</p>
+			{% endfor %}
+		{% endfor %}
 
-		<h2>Rendered markup</h2>
-		<pre>
-default: {{ widget|trim }}
-options: {{ customWidget|trim }}
-		</pre>
-
-		<h2>Live widget</h2>
-		<p>
-			The widget below fetches a challenge from <code>{{ challengeUrl }}</code> in the
-			browser and solves it. That client-side round trip is the real end-to-end
-			check: if the widget reaches &ldquo;verified&rdquo;, the challenge endpoint works.
-			The server-side checks above can&rsquo;t prove that on their own.
-		</p>
-		<form method="post" action="">
-			{{ craft.altcha.renderWidget() }}
-		</form>
+		{% if page %}
+			{% include "_lab_test/pages/#{page}" %}
+		{% else %}
+			{% include '_lab_test/pages/index' %}
+		{% endif %}
 	</body>
 </html>

@@ -1,0 +1,117 @@
+{% set plugin = craft.app.plugins.getPlugin('altcha') %}
+{% set settings = plugin ? plugin.settings : null %}
+
+{# Everything below is computed server-side so `curl -sf <url>/lab-test` can
+   assert on the PASS/FAIL markers without running a browser. #}
+{% set hmacKey = settings ? settings.hmacKey : '' %}
+{% set hmacConfigured = hmacKey is not empty and hmacKey|slice(0, 1) != '$' %}
+{% set challenge = plugin ? plugin.altcha.createChallenge() : null %}
+{% set challengeUrl = plugin ? craft.altcha.challengeUrl : '' %}
+{% set widget = plugin ? craft.altcha.renderWidget() ~ '' : '' %}
+{% set customWidget = plugin ? craft.altcha.renderWidget({
+	name: 'labAltcha',
+	display: 'bar',
+}) ~ '' : '' %}
+
+{% set integrationPlugins = {
+	'formie': 'Formie',
+	'comments': 'Comments',
+	'contact-form': 'Contact Form',
+	'guest-entries': 'Guest Entries',
+} %}
+
+{# The lab instance serves URLs through index.php, so the challenge URL carries
+   the action path as a query param rather than a /actions/… path segment. #}
+{% set checks = [
+	{ label: 'plugin installed', pass: plugin is not null, actual: plugin ? plugin.version : 'not installed' },
+	{ label: 'settings model loaded', pass: settings is not null, actual: settings ? settings|length ~ ' settings' : 'none' },
+	{ label: 'hmacKey configured (value not printed)', pass: hmacConfigured, actual: hmacConfigured ? hmacKey|length ~ ' chars' : 'unset or unresolved env ref' },
+	{ label: 'config/altcha.php applied (complexity 1000)', pass: settings and settings.complexity == 1000, actual: settings ? settings.complexity : 'n/a' },
+	{ label: 'challengeExpiryMinutes from config file', pass: settings and settings.challengeExpiryMinutes == 20, actual: settings ? settings.challengeExpiryMinutes : 'n/a' },
+	{ label: 'craft.altcha.challengeUrl points at the action', pass: 'actions/altcha/challenge' in challengeUrl, actual: challengeUrl },
+	{ label: 'createChallenge() issues a signed challenge', pass: challenge is not null and challenge.signature is not empty, actual: challenge ? challenge.parameters.algorithm ~ ', cost ' ~ challenge.parameters.cost ~ ', signed' : 'null' },
+	{ label: 'renderWidget() emits <altcha-widget', pass: '<altcha-widget' in widget, actual: widget|length ~ ' chars' },
+	{ label: 'renderWidget() sets a challenge attribute', pass: 'challenge="' in widget, actual: 'challenge="' in widget ? 'yes' : 'no' },
+	{ label: 'renderWidget() sets name="altcha"', pass: 'name="altcha"' in widget, actual: 'name="altcha"' in widget ? 'yes' : 'no' },
+	{ label: 'renderWidget() options override the name', pass: 'name="labAltcha"' in customWidget, actual: 'name="labAltcha"' in customWidget ? 'yes' : 'no' },
+	{ label: 'renderWidget() options set display="bar"', pass: 'display="bar"' in customWidget, actual: 'display="bar"' in customWidget ? 'yes' : 'no' },
+] %}
+
+{# The seed installs every compatible form plugin and switches its integration
+   on, so each ?page=… flow is testable the moment the instance is up. #}
+{% for handle, label in integrationPlugins %}
+	{% set installed = craft.app.plugins.getPlugin(handle) is not null %}
+	{% set checks = checks|merge([
+		{ label: label ~ ' installed', pass: installed, actual: installed ? 'yes' : 'no' },
+	]) %}
+{% endfor %}
+
+{% set checks = checks|merge([
+	{ label: 'Comments integration on', pass: settings and settings.enableComments, actual: settings ? (settings.enableComments ? 'on' : 'off') : 'n/a' },
+	{ label: 'Contact Form integration on', pass: settings and settings.enableContactForm, actual: settings ? (settings.enableContactForm ? 'on' : 'off') : 'n/a' },
+	{ label: 'User registration protection on', pass: settings and settings.enableUserRegistration, actual: settings ? (settings.enableUserRegistration ? 'on' : 'off') : 'n/a' },
+	{ label: 'Login protection on', pass: settings and settings.protectLogin, actual: settings ? (settings.protectLogin ? 'on' : 'off') : 'n/a' },
+	{ label: 'Forgot-password protection on', pass: settings and settings.protectForgotPassword, actual: settings ? (settings.protectForgotPassword ? 'on' : 'off') : 'n/a' },
+	{ label: 'Guest Entries integration on', pass: settings and settings.enableGuestEntries, actual: settings ? (settings.enableGuestEntries ? 'on' : 'off') : 'n/a' },
+	{ label: 'Blanket mode on, allowlisting entries/save-entry', pass: settings and settings.enableBlanketMode and 'entries/save-entry' in settings.blanketActionAllowlist, actual: settings ? (settings.enableBlanketMode ? settings.blanketActionAllowlist|join(', ') : 'off') : 'n/a' },
+]) %}
+
+{% set failures = checks|filter(check => not check.pass)|length %}
+
+<h2>Verdict</h2>
+<p id="verdict">{{ failures == 0 ? 'ALL PASS' : failures ~ ' FAILURES' }}</p>
+
+<h2>Checks</h2>
+<table>
+	<thead>
+		<tr>
+			<th>Check</th>
+			<th>Actual</th>
+			<th>Result</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for check in checks %}
+			<tr>
+				<td>{{ check.label }}</td>
+				<td>{{ check.actual }}</td>
+				<td>{{ check.pass ? 'PASS' : 'FAIL' }}</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+<h2>Rendered markup</h2>
+<pre>
+default: {{ widget|trim }}
+options: {{ customWidget|trim }}
+</pre>
+
+<h2>Live widget</h2>
+<p>
+	The widget below fetches a challenge from <code>{{ challengeUrl }}</code> in the
+	browser and solves it. That client-side round trip is the real end-to-end
+	check: if the widget reaches &ldquo;verified&rdquo;, the challenge endpoint works.
+	The server-side checks above can&rsquo;t prove that on their own.
+</p>
+<form method="post" action="">
+	{{ craft.altcha.renderWidget() }}
+</form>
+
+<h2>Integration pages</h2>
+<p>
+	Each page in the nav above holds one integration&rsquo;s form flow with its smoke
+	steps inline. The manual leftovers &mdash; toggles-off behavior, challenge expiry,
+	the comment-bypass listener, the Formie GraphQL mutation &mdash; are documented on
+	the relevant pages; flip toggles by editing this instance&rsquo;s
+	<code>config/altcha.php</code> and refreshing.
+</p>
+
+<h2>Manual checks &mdash; not covered by any page</h2>
+<ol class="hint">
+	<li><strong>Toggles off:</strong> set every integration toggle to <code>false</code> in <code>config/altcha.php</code> and confirm each page&rsquo;s form submits without an Altcha payload. Revert (or re-run <code>spark lab seed</code>).</li>
+	<li><strong>Fail closed:</strong> set <code>hmacKey</code> to <code>''</code> (or an unset <code>$ENV_REF</code>) and confirm the challenge endpoint errors instead of issuing a challenge. Revert.</li>
+	<li><strong>Widget options:</strong> remove the widget keys from <code>config/altcha.php</code>, then save each display and auto mode in the <a href="/admin/settings/altcha/widget">control panel</a> and confirm this page&rsquo;s rendered markup reflects them.</li>
+	<li><strong>Permissions:</strong> confirm <code>editor@lab.test</code> / <code>password</code> (non-admin) cannot open <code>/admin/settings/altcha</code>.</li>
+	<li><strong>Env key flow:</strong> <code>spark lab craft altcha/generate-hmac-key</code>, put the output in the instance&rsquo;s <code>.env</code> as <code>ALTCHA_HMAC_KEY</code>, set <code>hmacKey</code> to <code>'$ALTCHA_HMAC_KEY'</code>, and confirm the live widget above still verifies.</li>
+</ol>

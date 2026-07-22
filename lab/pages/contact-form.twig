@@ -1,0 +1,35 @@
+<h2>Contact Form</h2>
+
+<p class="hint">
+	Seeded state: integration on, <code>toEmail</code> pointed at Mailpit
+	(<code>spark lab list</code> shows its UI port). A failed verification is
+	flagged as <em>spam</em> per Contact Form&rsquo;s convention &mdash; the sender still
+	sees the success message &mdash; so Mailpit is the source of truth here.
+</p>
+
+<ol class="hint">
+	<li>Solve the widget, submit &mdash; success flash <em>and</em> the message lands in Mailpit.</li>
+	<li>Submit without touching the widget &mdash; same success flash, but <strong>no email in Mailpit</strong>: the message was spam-flagged and went nowhere.</li>
+</ol>
+
+<form method="post">
+	{{ csrfInput() }}
+	{{ actionInput('contact-form/send') }}
+	{{ redirectInput('lab-test?page=contact-form') }}
+
+	<label for="cf-name">Name</label>
+	<input id="cf-name" name="fromName" type="text" value="Lab Visitor">
+
+	<label for="cf-email">Email</label>
+	<input id="cf-email" name="fromEmail" type="email" value="visitor@lab.test">
+
+	<label for="cf-subject">Subject</label>
+	<input id="cf-subject" name="subject" type="text" value="Smoke test message">
+
+	<label for="cf-message">Message</label>
+	<textarea id="cf-message" name="message[body]">Hello from the smoke lab.</textarea>
+
+	{{ craft.altcha.renderWidget() }}
+
+	<p><button type="submit">Send</button></p>
+</form>

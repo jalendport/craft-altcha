@@ -1,0 +1,37 @@
+{% set form = craft.formie.forms({ handle: 'labForm' }).one() %}
+{% set submissions = form ? craft.formie.submissions().form('labForm').isSpam(false).all() : [] %}
+{% set spam = form ? craft.formie.submissions().form('labForm').isSpam(true).all() : [] %}
+
+<h2>Formie</h2>
+
+<p class="hint">
+	Seeded state: Altcha enabled in Formie&rsquo;s captcha settings and on the
+	<code>labForm</code> form. Formie injects the widget itself &mdash; nothing
+	Altcha-related lives in this template.
+</p>
+
+<ol class="hint">
+	<li>Solve the widget, submit &mdash; the submission appears below as ham.</li>
+	<li>Replay: resubmit the same page without re-solving (browser back, resubmit) &mdash; Formie marks it spam.</li>
+	<li>Expiry: solve, wait past the challenge expiry (20 minutes seeded), submit &mdash; marked spam.</li>
+	<li>GraphQL (manual): enable a schema with Formie mutation scope under <a href="/admin/graphql">GraphQL</a>, then run a <code>save_labForm_Submission</code> mutation &mdash; it should pass without widget verification.</li>
+</ol>
+
+{% if form %}
+	{{ craft.formie.renderForm('labForm') }}
+
+	<h3>Submissions</h3>
+	<p>
+		Ham: <strong>{{ submissions|length }}</strong> &mdash;
+		spam: <strong>{{ spam|length }}</strong>
+	</p>
+	{% if spam|length %}
+		<ul>
+			{% for submission in spam %}
+				<li>#{{ submission.id }} (spam) &mdash; {{ submission.spamReason }}</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+{% else %}
+	<p class="errors">No <code>labForm</code> form found &mdash; run <code>spark lab seed</code>.</p>
+{% endif %}

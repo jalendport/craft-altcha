@@ -1,0 +1,42 @@
+{% set currentUser = craft.app.user.identity %}
+{% set section = craft.app.entries.getSectionByHandle('labArticles') %}
+{% set entryType = craft.app.entries.getEntryTypeByHandle('labArticle') %}
+
+<h2>Blanket mode</h2>
+
+<p class="hint">
+	Seeded state: blanket mode on, allowlisting exactly
+	<code>entries/save-entry</code> &mdash; deliberately an action no integration
+	covers, because a payload verified twice trips replay protection. The form
+	below posts to that action, so it needs a signed-in user with save
+	permission: sign in at <a href="/admin">/admin</a> as
+	<strong>admin / password</strong> first. Currently signed in:
+	<strong>{{ currentUser ? currentUser.username : 'nobody' }}</strong>.
+</p>
+
+<ol class="hint">
+	<li>Signed in as admin, solve the widget, submit &mdash; the entry saves.</li>
+	<li>Submit without touching the widget &mdash; 400 &ldquo;Altcha verification failed&rdquo; from blanket mode, before Craft&rsquo;s controller runs.</li>
+	<li>Non-allowlisted actions: every other page in this lab posts to actions <em>not</em> on the allowlist and works normally &mdash; that is the &ldquo;leaves everything else untouched&rdquo; check.</li>
+	<li>Allowlist <code>*</code> in this instance&rsquo;s <code>config/altcha.php</code>, refresh the index page &mdash; the live widget still verifies, because <code>altcha/*</code> endpoints are never enforced. Revert afterwards.</li>
+	<li>CP, console, GET, and live-preview requests pass through untouched &mdash; you exercise the first two constantly while using this lab.</li>
+</ol>
+
+{% if section and entryType %}
+	<form method="post">
+		{{ csrfInput() }}
+		{{ actionInput('entries/save-entry') }}
+		{{ redirectInput('lab-test?page=blanket') }}
+		{{ hiddenInput('sectionId', section.id) }}
+		{{ hiddenInput('typeId', entryType.id) }}
+
+		<label for="blanket-title">Title</label>
+		<input id="blanket-title" name="title" type="text" value="Blanket entry {{ random(1000, 9999) }}">
+
+		{{ craft.altcha.renderWidget() }}
+
+		<p><button type="submit">Save entry</button></p>
+	</form>
+{% else %}
+	<p class="errors">No <code>labArticles</code> section found &mdash; run <code>spark lab seed</code>.</p>
+{% endif %}

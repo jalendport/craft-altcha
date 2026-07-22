@@ -1,0 +1,83 @@
+{% set entry = craft.entries.section('labArticles').one() %}
+{% set comments = entry ? craft.comments.fetch({ ownerId: entry.id }).all() : [] %}
+
+<h2>Comments</h2>
+
+<p class="hint">
+	Seeded state: guest commenting on, moderation off, integration on. The form
+	below is the raw <code>comments/comments/save</code> POST with the widget
+	inside, which is exactly what the integration verifies.
+</p>
+
+<ol class="hint">
+	<li>Solve the widget, submit &mdash; the comment appears in the list below.</li>
+	<li>Submit again <em>without</em> touching the widget &mdash; verification fails and nothing is saved.</li>
+	<li>Sign in at <a href="/admin">/admin</a> (admin / password), then trash one of your comments with the second form &mdash; no widget involved, and it still works.</li>
+	<li>Bypass listener: paste the snippet at the bottom into this instance&rsquo;s <code>config/app.php</code>, resubmit without a payload, confirm it saves; remove it and confirm verification blocks the save again.</li>
+</ol>
+
+{% if entry %}
+	<h3>Comments on &ldquo;{{ entry.title }}&rdquo;</h3>
+	{% if comments|length %}
+		<ul>
+			{% for comment in comments %}
+				<li>#{{ comment.id }} &mdash; <strong>{{ comment.name ?: 'anonymous' }}</strong>: {{ comment.comment }}</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>No comments yet.</p>
+	{% endif %}
+
+	<h3>Post a guest comment</h3>
+	<form method="post">
+		{{ csrfInput() }}
+		{{ actionInput('comments/comments/save') }}
+		{{ redirectInput('lab-test?page=comments') }}
+		{{ hiddenInput('elementId', entry.id) }}
+		{{ hiddenInput('siteId', entry.siteId) }}
+
+		<label for="comment-name">Name</label>
+		<input id="comment-name" name="fields[name]" type="text" value="Lab Guest">
+
+		<label for="comment-email">Email</label>
+		<input id="comment-email" name="fields[email]" type="email" value="guest@lab.test">
+
+		<label for="comment-body">Comment</label>
+		<textarea id="comment-body" name="fields[comment]">A comment from the smoke lab.</textarea>
+
+		{{ craft.altcha.renderWidget() }}
+
+		<p><button type="submit">Post comment</button></p>
+	</form>
+
+	<h3>Trash a comment (no widget)</h3>
+	<form method="post">
+		{{ csrfInput() }}
+		{{ actionInput('comments/comments/trash') }}
+		{{ redirectInput('lab-test?page=comments') }}
+
+		<label for="comment-id">Comment ID</label>
+		<input id="comment-id" name="commentId" type="number">
+
+		<p><button type="submit">Trash comment</button></p>
+	</form>
+{% else %}
+	<p class="errors">No lab article entry found &mdash; run <code>spark lab seed</code>.</p>
+{% endif %}
+
+<h3>Bypass listener snippet</h3>
+<p class="hint">
+	Add to the top of this instance&rsquo;s <code>config/app.php</code> (before its
+	<code>return</code>), then remove it when done:
+</p>
+<pre>use jalendport\altcha\events\VerifyCommentEvent;
+use jalendport\altcha\integrations\Comments as AltchaComments;
+use yii\base\Event;
+
+Event::on(
+    AltchaComments::class,
+    AltchaComments::EVENT_BEFORE_VERIFY_COMMENT,
+    static function (VerifyCommentEvent $event): void {
+        $event->skipVerification = true;
+    },
+);</pre>
