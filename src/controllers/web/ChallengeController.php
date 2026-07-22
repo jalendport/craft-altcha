@@ -13,33 +13,29 @@ use yii\web\Response;
  */
 class ChallengeController extends Controller
 {
-
     public $defaultAction = 'index';
     protected array|int|bool $allowAnonymous = true;
 
 
-	public function actionIndex(): Response
+    public function actionIndex(): Response
     {
+        $altcha = new AltchaClient(Altcha::getInstance()->getSettings()->hmacKey);
 
-		$altcha = new AltchaClient(Altcha::getInstance()->getSettings()->hmacKey);
+        $options = new ChallengeOptions(
+            maxNumber: Altcha::getInstance()->getSettings()->complexity,
+            expires: (new \DateTimeImmutable())->add(new \DateInterval('PT10S')),
+        );
 
-		$options = new ChallengeOptions(
-			maxNumber: Altcha::getInstance()->getSettings()->complexity,
-			expires: (new \DateTimeImmutable())->add(new \DateInterval('PT10S')),
-		);
+        $challenge = $altcha->createChallenge($options);
 
-		$challenge = $altcha->createChallenge($options);
+        $payload = [
+            'algorithm' => $challenge->algorithm,
+            'challenge' => $challenge->challenge,
+            'maxnumber' => $challenge->maxNumber,
+            'salt' => $challenge->salt,
+            'signature' => $challenge->signature,
+        ];
 
-		$payload = [
-			'algorithm' => $challenge->algorithm,
-			'challenge' => $challenge->challenge,
-			'maxnumber' => $challenge->maxNumber,
-			'salt'      => $challenge->salt,
-			'signature' => $challenge->signature,
-		];
-
-		return $this->asJson($payload);
-
+        return $this->asJson($payload);
     }
-
 }

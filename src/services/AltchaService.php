@@ -24,110 +24,96 @@ use yii\web\View;
  */
 class AltchaService extends Component
 {
+    /**
+     * @throws InvalidConfigException
+     */
+    public function craftVariableInitEventHandler(Event $e): void
+    {
 
-	/**
-	 * @throws InvalidConfigException
-	 */
-	public function craftVariableInitEventHandler(Event $e): void
-	{
+        /** @var CraftVariable $variable */
+        $variable = $e->sender;
 
-		/** @var CraftVariable $variable */
-		$variable = $e->sender;
-
-		// Attach the AltchaVariable service
-		$variable->set('altcha', AltchaVariable::class);
-
-	}
+        // Attach the AltchaVariable service
+        $variable->set('altcha', AltchaVariable::class);
+    }
 
 
-	public function beginBodyEventHandler(): void
-	{
-
-		if (!Craft::$app->getRequest()->getIsCpRequest() &&
-			!Craft::$app->getRequest()->getIsConsoleRequest() &&
-			AltchaPlugin::getInstance()->getSettings()->registerWidgetJs)
-		{
-			$this->registerAltchaWidgetScript();
-		}
-
-	}
+    public function beginBodyEventHandler(): void
+    {
+        if (!Craft::$app->getRequest()->getIsCpRequest() &&
+            !Craft::$app->getRequest()->getIsConsoleRequest() &&
+            AltchaPlugin::getInstance()->getSettings()->registerWidgetJs) {
+            $this->registerAltchaWidgetScript();
+        }
+    }
 
 
-	private function registerAltchaWidgetScript(): void
-	{
-
-		try {
-			Craft::$app->getView()->registerJsFile(
-				'https://cdn.jsdelivr.net/gh/altcha-org/altcha/dist/altcha.min.js',
-				[
-					'async' => true,
-					'defer' => true,
-					'type' => 'module',
-					'position' => View::POS_HEAD,
-				]
-			);
-		} catch (InvalidConfigException $e) {
-			AltchaPlugin::error($e->getMessage());
-		}
-
-	}
+    private function registerAltchaWidgetScript(): void
+    {
+        try {
+            Craft::$app->getView()->registerJsFile(
+                'https://cdn.jsdelivr.net/gh/altcha-org/altcha/dist/altcha.min.js',
+                [
+                    'async' => true,
+                    'defer' => true,
+                    'type' => 'module',
+                    'position' => View::POS_HEAD,
+                ]
+            );
+        } catch (InvalidConfigException $e) {
+            AltchaPlugin::error($e->getMessage());
+        }
+    }
 
 
-	/**
-	 * @throws SyntaxError
-	 * @throws RuntimeError
-	 * @throws Exception
-	 * @throws LoaderError
-	 */
-	public function renderWidget(array $options = []): Markup
-	{
+    /**
+     * @throws SyntaxError
+     * @throws RuntimeError
+     * @throws Exception
+     * @throws LoaderError
+     */
+    public function renderWidget(array $options = []): Markup
+    {
+        $view = Craft::$app->getView();
+        $oldTemplatesPath = $view->getTemplatesPath();
+        $templatePath = Craft::getAlias('@jalendport/altcha/templates');
+        $view->setTemplatesPath($templatePath);
 
-		$view = Craft::$app->getView();
-		$oldTemplatesPath = $view->getTemplatesPath();
-		$templatePath = Craft::getAlias('@jalendport/altcha/templates');
-		$view->setTemplatesPath($templatePath);
+        // Merge provided options with defaults
+        $options = array_merge([
+            'challengeurl' => $this->getChallengeUrl(),
+        ], $options);
 
-		// Merge provided options with defaults
-		$options = array_merge([
-			'challengeurl' => $this->getChallengeUrl(),
-		], $options);
+        $widgetHtml = $view->renderTemplate('_widget', [
+            'options' => $options,
+        ]);
 
-		$widgetHtml = $view->renderTemplate('_widget', [
-			'options' => $options,
-		]);
+        // Restore the original templates path
+        $view->setTemplatesPath($oldTemplatesPath);
 
-		// Restore the original templates path
-		$view->setTemplatesPath($oldTemplatesPath);
-
-		return Template::raw($widgetHtml);
-
-	}
+        return Template::raw($widgetHtml);
+    }
 
 
-	public function getChallengeUrl(): string
-	{
+    public function getChallengeUrl(): string
+    {
+        $settings = AltchaPlugin::getInstance()->getSettings();
 
-		$settings = AltchaPlugin::getInstance()->getSettings();
+        if ($settings->verificationMethod === 'sentinel') {
+            return $settings->sentinelEndpointUrl . '?apiKey=' . $settings->sentinelApiKey;
+        }
 
-		if ($settings->verificationMethod === 'sentinel') {
-			return $settings->sentinelEndpointUrl . '?apiKey=' . $settings->sentinelApiKey;
-		}
-
-		return UrlHelper::actionUrl('altcha/challenge');
-
-	}
+        return UrlHelper::actionUrl('altcha/challenge');
+    }
 
 
-	public function verifySolution($payload): bool
-	{
+    public function verifySolution($payload): bool
+    {
+        $altcha = new AltchaClient(Altcha::getInstance()->getSettings()->hmacKey);
 
-		$altcha = new AltchaClient(Altcha::getInstance()->getSettings()->hmacKey);
-
-		return $altcha->verifySolution(
-			$payload,
-			true
-		);
-
-	}
-
+        return $altcha->verifySolution(
+            $payload,
+            true
+        );
+    }
 }
