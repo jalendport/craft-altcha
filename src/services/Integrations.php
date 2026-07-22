@@ -1,52 +1,103 @@
 <?php
+/**
+ * Altcha plugin for Craft CMS 5.x
+ *
+ * Registers the plugin's third-party integrations.
+ *
+ * @link      https://jalendport.com
+ * @copyright Copyright (c) 2026 Jalen Davenport
+ */
 
 namespace jalendport\altcha\services;
 
 use craft\base\Element;
-use craft\base\Event;
+use craft\events\ModelEvent;
+use jalendport\altcha\Altcha as AltchaPlugin;
 use jalendport\altcha\integrations\Comments;
 use jalendport\altcha\integrations\formie\Altcha as FormieIntegration;
+use verbb\comments\elements\Comment;
+use verbb\formie\events\RegisterIntegrationsEvent;
+use verbb\formie\services\Integrations as FormieIntegrations;
 use yii\base\Component;
+use yii\base\Event;
 
 /**
- * Integrations service
+ * Wires up every integration the plugin ships, each behind both a `class_exists`
+ * check for the host plugin and — where the integration changes how an existing
+ * form behaves — its own settings toggle, so installing this plugin is inert
+ * until it's switched on.
+ *
+ * Formie is the exception: it registers Altcha as an available captcha, which
+ * only takes effect once it's enabled per form in Formie itself.
+ *
+ * @author Jalen Davenport <hello@jalendport.com>
+ * @since 1.0.0
  */
 class Integrations extends Component
 {
+    // Public Methods
+    // =========================================================================
+
+    /**
+     * Registers all available integrations.
+     *
+     * @return void
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
     public function addAll(): void
     {
-        $this->addFormieIntegration();
-        $this->addCommentsIntegration();
+        $this->_addFormieIntegration();
+        $this->_addCommentsIntegration();
     }
 
+    // Private Methods
+    // =========================================================================
 
-    private function addFormieIntegration(): void
+    /**
+     * Registers the Verbb Comments integration.
+     *
+     * @return void
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
+    private function _addCommentsIntegration(): void
     {
-        if (!class_exists(\verbb\formie\services\Integrations::class)) {
+        if (!AltchaPlugin::$plugin->getSettings()->enableComments) {
+            return;
+        }
+
+        if (!class_exists(Comment::class)) {
             return;
         }
 
         Event::on(
-            \verbb\formie\services\Integrations::class,
-            \verbb\formie\services\Integrations::EVENT_REGISTER_INTEGRATIONS,
-            function(\verbb\formie\events\RegisterIntegrationsEvent $event) {
-                $event->captchas[] = FormieIntegration::class;
+            Comment::class,
+            Element::EVENT_BEFORE_SAVE,
+            static function(ModelEvent $event): void {
+                Comments::beforeSaveComment($event);
             }
         );
     }
 
-
-    private function addCommentsIntegration(): void
+    /**
+     * Registers Altcha as an available Formie captcha.
+     *
+     * @return void
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
+    private function _addFormieIntegration(): void
     {
-        if (!class_exists(\verbb\comments\elements\Comment::class)) {
+        if (!class_exists(FormieIntegrations::class)) {
             return;
         }
 
         Event::on(
-            \verbb\comments\elements\Comment::class,
-            Element::EVENT_BEFORE_SAVE,
-            function(\craft\events\ModelEvent $event) {
-                Comments::beforeSaveComment($event);
+            FormieIntegrations::class,
+            FormieIntegrations::EVENT_REGISTER_INTEGRATIONS,
+            static function(RegisterIntegrationsEvent $event): void {
+                $event->captchas[] = FormieIntegration::class;
             }
         );
     }
