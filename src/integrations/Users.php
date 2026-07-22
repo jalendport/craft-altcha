@@ -77,8 +77,11 @@ class Users
      * Returns whether the given user action is one this site protects.
      *
      * `save-user` covers both public registration and a logged-in user editing
-     * their own account; only the former posts without a `userId`, and only the
-     * former should be held to a challenge.
+     * their own account; only the former should be held to a challenge. Craft
+     * decides new-vs-edit from a falsy `userId` (`$isNewUser = !$userId` in its
+     * own controller), so mirror that exactly — a strict `=== null` check would
+     * miss a registration posted with an empty or `0` `userId` and skip
+     * verification on it.
      *
      * @param string $actionId the action being run
      * @return bool whether the action requires a solution
@@ -91,7 +94,7 @@ class Users
         $request = Craft::$app->getRequest();
 
         return match ($actionId) {
-            'save-user' => $settings->enableUserRegistration && $request->post('userId') === null,
+            'save-user' => $settings->enableUserRegistration && !$request->post('userId'),
             'login' => $settings->protectLogin,
             'send-password-reset-email' => $settings->protectForgotPassword,
             default => false,
