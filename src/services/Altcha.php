@@ -18,11 +18,13 @@ use AltchaOrg\Altcha\CreateChallengeOptions;
 use AltchaOrg\Altcha\VerifySolutionOptions;
 use Craft;
 use craft\helpers\App;
+use craft\helpers\Json;
 use craft\helpers\Template;
 use craft\helpers\UrlHelper;
 use InvalidArgumentException;
 use jalendport\altcha\Altcha as AltchaPlugin;
 use jalendport\altcha\models\Settings;
+use jalendport\altcha\web\assets\widget\WidgetAsset;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -31,7 +33,6 @@ use yii\base\Component;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\caching\CacheInterface;
-use yii\web\View;
 
 /**
  * The Altcha service holds all of the challenge and verification logic. The
@@ -70,31 +71,6 @@ class Altcha extends Component
 
     // Public Methods
     // =========================================================================
-
-    /**
-     * Handles the {@see \yii\web\View::EVENT_BEGIN_BODY} event, registering the
-     * widget script on front-end requests when the setting is enabled.
-     *
-     * @return void
-     * @author Jalen Davenport <hello@jalendport.com>
-     * @since 1.0.0
-     */
-    public function beginBodyEventHandler(): void
-    {
-        if (Craft::$app->getRequest()->getIsCpRequest()) {
-            return;
-        }
-
-        if (Craft::$app->getRequest()->getIsConsoleRequest()) {
-            return;
-        }
-
-        if (!$this->getSettings()->registerWidgetJs) {
-            return;
-        }
-
-        $this->_registerWidgetScript();
-    }
 
     /**
      * Issues a fresh challenge for the widget to solve, signed with the
@@ -174,32 +150,42 @@ class Altcha extends Component
     }
 
     /**
-     * Renders the Altcha widget, merging the challenge URL with the given
-     * options.
+     * Renders the Altcha widget, merging the settings-derived attribute
+     * defaults with the given per-call options.
      *
-     * @param array<string, mixed> $options the widget attribute overrides
+     * Every resulting entry is rendered as an attribute on `<altcha-widget>`,
+     * so any widget attribute the vendored script understands can be passed
+     * through without a code change here.
+     *
+     * @param array<string, mixed> $options the widget attribute overrides,
+     * which win over the configured defaults
      * @return Markup the rendered widget
      * @throws LoaderError if the widget template can't be loaded
      * @throws RuntimeError if rendering the widget template fails
      * @throws SyntaxError if the widget template has a syntax error
      * @throws Exception if the templates path can't be resolved
+     * @throws InvalidConfigException if the widget asset bundle can't be
+     * registered
      * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function renderWidget(array $options = []): Markup
     {
         $view = Craft::$app->getView();
+
+        if ($this->getSettings()->registerWidgetJs) {
+            // Yii dedupes bundles, so rendering several widgets on one page
+            // still registers the script once.
+            $view->registerAssetBundle(WidgetAsset::class);
+        }
+
         $oldTemplatesPath = $view->getTemplatesPath();
         $templatePath = Craft::getAlias('@jalendport/altcha/templates');
         $view->setTemplatesPath($templatePath);
 
-        $options = array_merge([
-            'challengeurl' => $this->getChallengeUrl(),
-        ], $options);
-
         try {
             $widgetHtml = $view->renderTemplate('_widget', [
-                'options' => $options,
+                'attributes' => $this->_widgetAttributes($options),
             ]);
         } finally {
             // Always restore the path so an exception here doesn't break Twig
@@ -331,26 +317,55 @@ class Altcha extends Component
     }
 
     /**
-     * Registers the Altcha widget script on the current front-end request.
+     * Builds the attribute map for `<altcha-widget>` from the configured
+     * widget defaults, overridden by the given per-call options.
      *
-     * @return void
+     * Defaults that match the widget's own are left out to keep the markup
+     * minimal. `hideLogo` and `hideFooter` aren't widget attributes in v3 —
+     * they only exist as configuration properties — so they travel in the
+     * JSON-encoded `configuration` attribute.
+     *
+     * @param array<string, mixed> $options the per-call attribute overrides
+     * @return array<string, mixed> the attributes to render
      * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
-    private function _registerWidgetScript(): void
+    private function _widgetAttributes(array $options): array
     {
-        try {
-            Craft::$app->getView()->registerJsFile(
-                'https://cdn.jsdelivr.net/gh/altcha-org/altcha/dist/altcha.min.js',
-                [
-                    'async' => true,
-                    'defer' => true,
-                    'type' => 'module',
-                    'position' => View::POS_HEAD,
-                ]
-            );
-        } catch (InvalidConfigException $e) {
-            AltchaPlugin::error($e->getMessage());
+        $settings = $this->getSettings();
+
+        $attributes = [
+            'challenge' => $this->getChallengeUrl(),
+            // Every server-side check reads the payload under this name.
+            'name' => 'altcha',
+        ];
+
+        if ($settings->widgetDisplay !== 'standard') {
+            $attributes['display'] = $settings->widgetDisplay;
         }
+
+        if ($settings->widgetAuto !== 'off') {
+            $attributes['auto'] = $settings->widgetAuto;
+        }
+
+        if ($settings->widgetTheme !== '') {
+            $attributes['theme'] = $settings->widgetTheme;
+        }
+
+        $configuration = array_filter([
+            'hideFooter' => $settings->widgetHideFooter,
+            'hideLogo' => $settings->widgetHideLogo,
+        ]);
+
+        if (is_array($options['configuration'] ?? null)) {
+            $configuration = array_merge($configuration, $options['configuration']);
+            unset($options['configuration']);
+        }
+
+        if ($configuration !== []) {
+            $attributes['configuration'] = Json::encode($configuration);
+        }
+
+        return array_merge($attributes, $options);
     }
 }

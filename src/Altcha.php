@@ -16,7 +16,6 @@ use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
-use craft\web\View;
 use jalendport\altcha\models\Settings;
 use jalendport\altcha\services\Altcha as AltchaService;
 use jalendport\altcha\services\Integrations;
@@ -26,7 +25,6 @@ use yii\base\Event;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidRouteException;
 use yii\web\Response;
-use yii\web\View as YiiView;
 
 /**
  * Altcha plugin.
@@ -104,7 +102,6 @@ class Altcha extends Plugin
         self::$plugin = $this;
 
         $this->_registerVariable();
-        $this->_registerWidgetScript();
 
         if (Craft::$app->getRequest()->getIsCpRequest()) {
             $this->_registerCpRoutes();
@@ -199,22 +196,6 @@ class Altcha extends Plugin
                 $variable = $event->sender;
                 $variable->set('altcha', AltchaVariable::class);
             }
-        );
-    }
-
-    /**
-     * Wires the front-end widget script registration to the begin-body event.
-     *
-     * @return void
-     * @author Jalen Davenport <hello@jalendport.com>
-     * @since 1.0.0
-     */
-    private function _registerWidgetScript(): void
-    {
-        Event::on(
-            View::class,
-            YiiView::EVENT_BEGIN_BODY,
-            [$this->altcha, 'beginBodyEventHandler']
         );
     }
 }

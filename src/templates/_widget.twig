@@ -1,5 +1,10 @@
+{# Renders every attribute the service resolved, so widget options don't need
+   to be mirrored here. Booleans render bare when true and are omitted when
+   false. #}
 <altcha-widget
-	challengeurl="{{ options.challengeurl }}"
-	hidefooter
-	hidelogo
+	{%- for name, value in attributes %}
+		{%- if value is same as(true) %} {{ name }}
+		{%- elseif value is not same as(false) and value is not null %} {{ name }}="{{ value }}"
+		{%- endif %}
+	{%- endfor %}
 ></altcha-widget>
