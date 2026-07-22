@@ -3,7 +3,7 @@
 use jalendport\altcha\models\Settings;
 
 test('settings defaults pass validation when the required HMAC key is configured', function(): void {
-    expect(new Settings(['hmacKey' => 'test-hmac-key'])->validate())->toBeTrue();
+    expect((new Settings(['hmacKey' => 'test-hmac-key']))->validate())->toBeTrue();
 });
 
 test('invalid settings fail validation', function(Closure $configure, string $attribute): void {
