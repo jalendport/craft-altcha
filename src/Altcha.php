@@ -1,101 +1,129 @@
 <?php
+/**
+ * Altcha plugin for Craft CMS 5.x
+ *
+ * Integrate Altcha's privacy-first spam protection into your forms.
+ *
+ * @link      https://jalendport.com
+ * @copyright Copyright (c) 2026 Jalen Davenport
+ */
 
 namespace jalendport\altcha;
 
 use Craft;
-use craft\base\Event;
 use craft\base\Model;
-use craft\base\Plugin;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
-use craft\log\MonologTarget;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
-use jalendport\altcha\controllers\console\AltchaConsoleController;
 use jalendport\altcha\models\Settings;
-use jalendport\altcha\services\AltchaService as AltchaService;
-use jalendport\altcha\services\AltchaVariable;
+use jalendport\altcha\services\Altcha as AltchaService;
 use jalendport\altcha\services\Integrations;
-use Monolog\Formatter\LineFormatter;
-use Psr\Log\LogLevel;
+use jalendport\altcha\variables\AltchaVariable;
+use jalendport\base\Plugin;
+use yii\base\Event;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidRouteException;
+use yii\web\Response;
 use yii\web\View as YiiView;
 
 /**
- * Altcha plugin
+ * Altcha plugin.
  *
- * @method static Altcha getInstance()
- * @method Settings getSettings()
+ * The main class is deliberately lean: components live in the static
+ * {@see config()} method, and {@see init()} is a table of contents of private
+ * `_registerXxx()` methods. Per-plugin file logging, the `@altcha` alias, and
+ * the shared settings template root come from {@see \jalendport\base\Plugin}.
+ *
  * @author Jalen Davenport <hello@jalendport.com>
- * @copyright Jalen Davenport
- * @license MIT
- * @property-read AltchaService $altchaService
- * @property-read AltchaVariable $altchaVariable
+ * @since 1.0.0
+ *
+ * @property-read AltchaService $altcha
  * @property-read Integrations $integrations
+ * @method Settings getSettings()
  */
 class Altcha extends Plugin
 {
-    public string $schemaVersion = '1.0.0';
+    // Static Properties
+    // =========================================================================
+
+    /**
+     * @var Altcha the plugin instance
+     * @since 1.0.0
+     */
+    public static Altcha $plugin;
+
+    // Public Properties
+    // =========================================================================
+
+    /**
+     * @var bool whether the plugin has a settings page in the control panel
+     * @since 1.0.0
+     */
     public bool $hasCpSettings = true;
 
+    /**
+     * @var string the plugin's schema version
+     * @since 1.0.0
+     */
+    public string $schemaVersion = '1.0.0';
 
+    // Static Methods
+    // =========================================================================
+
+    /**
+     * Registers the plugin's components per the Craft 5 plugin spec.
+     *
+     * @return array the component configuration
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
     public static function config(): array
     {
         return [
             'components' => [
-                'altchaService' => AltchaService::class,
-                'altchaVariable' => AltchaVariable::class,
+                'altcha' => AltchaService::class,
                 'integrations' => Integrations::class,
             ],
         ];
     }
 
+    // Public Methods
+    // =========================================================================
 
+    /**
+     * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
     public function init(): void
     {
-        Craft::setAlias('@altcha', __DIR__);
-
-        if (Craft::$app->request->isConsoleRequest) {
-            $this->controllerNamespace = 'jalendport\\altcha\\null';
-            Craft::$app->controllerMap['altcha'] = AltchaConsoleController::class;
-        } else {
-            $this->controllerNamespace = 'jalendport\\altcha\\controllers\\web';
-        }
-
         parent::init();
 
-        $this->_attachEventHandlers();
-        $this->_registerCpRoutes();
-        $this->_registerLogTarget();
+        self::$plugin = $this;
 
-        // Any code that creates an element query or loads Twig should be deferred until
-        // after Craft is fully initialized, to avoid conflicts with other plugins/modules
+        $this->_registerVariable();
+        $this->_registerWidgetScript();
+
+        if (Craft::$app->getRequest()->getIsCpRequest()) {
+            $this->_registerCpRoutes();
+        }
+
+        // Element queries, Twig, and other plugins aren't ready during boot, so
+        // defer integration wiring until Craft is fully initialized.
         Craft::$app->onInit(function() {
             $this->integrations->addAll();
         });
     }
 
-
     /**
-     * @throws InvalidConfigException
+     * Returns the settings sub-navigation shown on the plugin's settings pages.
+     *
+     * @return array<string, array<string, string>> the nav items, keyed by handle
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
      */
-    protected function createSettingsModel(): ?Model
-    {
-        return Craft::createObject(Settings::class);
-    }
-
-
-    /**
-     * @throws InvalidRouteException
-     */
-    public function getSettingsResponse(): \craft\web\Response
-    {
-        return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('settings/altcha'));
-    }
-
-
     public function getSettingsNavItems(): array
     {
         return [
@@ -105,29 +133,47 @@ class Altcha extends Plugin
         ];
     }
 
-
-    private function _attachEventHandlers(): void
+    /**
+     * @inheritdoc
+     * @throws InvalidRouteException if the settings route can't be resolved
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
+    public function getSettingsResponse(): Response
     {
-        Event::on(
-            CraftVariable::class,
-            CraftVariable::EVENT_INIT,
-            [$this->altchaService, 'craftVariableInitEventHandler']
-        );
-
-        Event::on(
-            View::class,
-            YiiView::EVENT_BEGIN_BODY,
-            [$this->altchaService, 'beginBodyEventHandler']
-        );
+        return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('settings/altcha'));
     }
 
+    // Protected Methods
+    // =========================================================================
 
+    /**
+     * @inheritdoc
+     * @throws InvalidConfigException if the settings model can't be created
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
+    protected function createSettingsModel(): ?Model
+    {
+        return Craft::createObject(Settings::class);
+    }
+
+    // Private Methods
+    // =========================================================================
+
+    /**
+     * Registers the plugin's control panel settings routes.
+     *
+     * @return void
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
     private function _registerCpRoutes(): void
     {
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            function(RegisterUrlRulesEvent $event) {
+            static function(RegisterUrlRulesEvent $event): void {
                 $event->rules['settings/altcha'] = 'altcha/settings/index';
                 $event->rules['settings/altcha/general'] = 'altcha/settings/general';
                 $event->rules['settings/altcha/integrations'] = 'altcha/settings/integrations';
@@ -136,40 +182,39 @@ class Altcha extends Plugin
         );
     }
 
-
     /**
-     * Logs an informational message to our custom log target.
+     * Registers the `craft.altcha` Twig variable.
+     *
+     * @return void
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
      */
-    public static function info(string $message): void
+    private function _registerVariable(): void
     {
-        Craft::info($message, 'altcha');
+        Event::on(
+            CraftVariable::class,
+            CraftVariable::EVENT_INIT,
+            static function(Event $event): void {
+                /** @var CraftVariable $variable */
+                $variable = $event->sender;
+                $variable->set('altcha', AltchaVariable::class);
+            }
+        );
     }
 
-
     /**
-     * Logs an error message to our custom log target.
+     * Wires the front-end widget script registration to the begin-body event.
+     *
+     * @return void
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
      */
-    public static function error(string $message): void
+    private function _registerWidgetScript(): void
     {
-        Craft::error($message, 'altcha');
-    }
-
-
-    /**
-     * Sets up custom logger so module-specific logs end up in their own file
-     */
-    private function _registerLogTarget(): void
-    {
-        Craft::getLogger()->dispatcher->targets[] = new MonologTarget([
-            'name' => 'altcha',
-            'categories' => ['altcha'],
-            'level' => LogLevel::INFO,
-            'logContext' => false,
-            'allowLineBreaks' => false,
-            'formatter' => new LineFormatter(
-                format: "%datetime% %message%\n",
-                dateFormat: 'Y-m-d H:i:s',
-            ),
-        ]);
+        Event::on(
+            View::class,
+            YiiView::EVENT_BEGIN_BODY,
+            [$this->altcha, 'beginBodyEventHandler']
+        );
     }
 }

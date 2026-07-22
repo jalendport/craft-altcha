@@ -63,7 +63,7 @@ class Altcha extends \verbb\formie\base\Captcha
      */
     public function getFrontEndHtml(\verbb\formie\elements\Form $form, $page = null): string
     {
-        return AltchaPlugin::getInstance()->altchaService->renderWidget();
+        return AltchaPlugin::$plugin->altcha->renderWidget();
     }
 
 
@@ -77,7 +77,7 @@ class Altcha extends \verbb\formie\base\Captcha
         }
 
         // Verify the solution
-        $verified = AltchaPlugin::getInstance()->altchaService->verifySolution($payload);
+        $verified = AltchaPlugin::$plugin->altcha->verifySolution($payload);
 
         if (!$verified) {
             $this->spamReason = Craft::t('altcha', 'Submission failed Altcha verification.');
