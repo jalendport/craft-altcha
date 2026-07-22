@@ -29,7 +29,7 @@
     "php": "^8.2",
     "craftcms/cms": "^5.0.0",
     "jalendport/craft-base": "^1.1",
-    "altcha-org/altcha": "^1.1.2"
+    "altcha-org/altcha": "^2.0"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",
