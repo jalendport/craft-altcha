@@ -112,7 +112,7 @@ Turn on **Contact Form** under **Settings → Altcha → Integrations**, and add
 ```twig
 <form method="post">
 	{{ csrfInput() }}
-	{{ actionInput('contact-form/send-message') }}
+	{{ actionInput('contact-form/send') }}
 
 	{# … your fields … #}
 
@@ -152,7 +152,7 @@ Turn on **Guest Entries** under **Settings → Altcha → Integrations**, and ad
 ```twig
 <form method="post">
 	{{ csrfInput() }}
-	{{ actionInput('guest-entries/save-entry') }}
+	{{ actionInput('guest-entries/save') }}
 
 	{# … your fields … #}
 
