@@ -177,6 +177,8 @@ campaign/forms/*
 
 Each row is either an exact `controller/action` path or a prefix ending in `*`, matched case-insensitively. Altcha's own action paths are never enforced, so the challenge endpoint always stays reachable. Anything not on the list is untouched.
 
+> **Don't allowlist an action a dedicated integration already covers.** A solved payload is only good once, so if blanket mode and one of the built-in integrations (Formie, Comments, Contact Form, Guest Entries, or the user forms) both verify the same submission, the second one sees the payload as already spent and rejects a legitimate form as a replay. Blanket mode is for form plugins that have *no* dedicated integration; leave the rest to their own toggles.
+
 Blanket mode only applies to front-end POST requests. Control panel requests, console commands, GET requests, and live preview all pass through, so previewing a protected form doesn't break.
 
 You still have to get the widget into the form. Freeform and Campaign both render their own markup, so add `{{ craft.altcha.renderWidget() }}` through whichever mechanism the plugin gives you for custom form markup — Freeform's form formatting templates, or your own template around Campaign's form. A POST to an allowlisted path with a missing or invalid solution is rejected with a 400.
@@ -231,6 +233,8 @@ The event carries the `Comment` about to be saved as `$event->comment`. Setting 
 | `widgetHideFooter` | `true` | Whether the "Protected by ALTCHA" footer beneath the widget is hidden. |
 
 The plugin's three settings pages — **General Settings**, **Integrations**, and **Widget Options** — are admin-only, since the HMAC key lives on them.
+
+> **Replay protection uses Craft's cache.** A spent payload is recorded through the cache component, so the "accepted exactly once" guarantee is as strong as the configured cache driver's atomic writes. Redis and Memcached add entries atomically; the default file cache is check-then-set, so a busy site fielding deliberately concurrent replays of one payload is better served by a Redis or Memcached cache. It stops casual replay either way.
 
 ### Overriding plugin settings
 
