@@ -1,7 +1,6 @@
-*.DS_Store
-*.idea/*
-*.log
-*Thumbs.db
-.env
-/node_modules
+.DS_Store
 /vendor
+/composer.lock
+/.phpunit.cache
+/tmp
+/.agents
