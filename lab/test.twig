@@ -1,0 +1,83 @@
+{% set plugin = craft.app.plugins.getPlugin('altcha') %}
+{% set settings = plugin ? plugin.settings : null %}
+
+{# Everything below is computed server-side so `curl -sf <url>/lab-test` can
+   assert on the PASS/FAIL markers without running a browser. #}
+{% set hmacKey = settings ? settings.hmacKey : '' %}
+{% set hmacConfigured = hmacKey is not empty and hmacKey|slice(0, 1) != '$' %}
+{% set challenge = plugin ? plugin.altcha.createChallenge() : null %}
+{% set challengeUrl = plugin ? craft.altcha.challengeUrl : '' %}
+{% set widget = plugin ? craft.altcha.renderWidget() ~ '' : '' %}
+{% set customWidget = plugin ? craft.altcha.renderWidget({
+	name: 'labAltcha',
+	display: 'bar',
+}) ~ '' : '' %}
+
+{# The lab instance serves URLs through index.php, so the challenge URL carries
+   the action path as a query param rather than a /actions/… path segment. #}
+{% set checks = [
+	{ label: 'plugin installed', pass: plugin is not null, actual: plugin ? plugin.version : 'not installed' },
+	{ label: 'settings model loaded', pass: settings is not null, actual: settings ? settings|length ~ ' settings' : 'none' },
+	{ label: 'hmacKey configured (value not printed)', pass: hmacConfigured, actual: hmacConfigured ? hmacKey|length ~ ' chars' : 'unset or unresolved env ref' },
+	{ label: 'config/altcha.php applied (complexity 1000)', pass: settings and settings.complexity == 1000, actual: settings ? settings.complexity : 'n/a' },
+	{ label: 'challengeExpiryMinutes from config file', pass: settings and settings.challengeExpiryMinutes == 20, actual: settings ? settings.challengeExpiryMinutes : 'n/a' },
+	{ label: 'craft.altcha.challengeUrl points at the action', pass: 'actions/altcha/challenge' in challengeUrl, actual: challengeUrl },
+	{ label: 'createChallenge() issues a signed challenge', pass: challenge is not null and challenge.signature is not empty, actual: challenge ? challenge.parameters.algorithm ~ ', cost ' ~ challenge.parameters.cost ~ ', signed' : 'null' },
+	{ label: 'renderWidget() emits <altcha-widget', pass: '<altcha-widget' in widget, actual: widget|length ~ ' chars' },
+	{ label: 'renderWidget() sets a challenge attribute', pass: 'challenge="' in widget, actual: 'challenge="' in widget ? 'yes' : 'no' },
+	{ label: 'renderWidget() sets name="altcha"', pass: 'name="altcha"' in widget, actual: 'name="altcha"' in widget ? 'yes' : 'no' },
+	{ label: 'renderWidget() options override the name', pass: 'name="labAltcha"' in customWidget, actual: 'name="labAltcha"' in customWidget ? 'yes' : 'no' },
+	{ label: 'renderWidget() options set display="bar"', pass: 'display="bar"' in customWidget, actual: 'display="bar"' in customWidget ? 'yes' : 'no' },
+] %}
+{% set failures = checks|filter(check => not check.pass)|length %}
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Altcha smoke test</title>
+	</head>
+	<body>
+		<h1>Altcha smoke test</h1>
+
+		<h2>Verdict</h2>
+		<p id="verdict">{{ failures == 0 ? 'ALL PASS' : failures ~ ' FAILURES' }}</p>
+
+		<h2>Checks</h2>
+		<table border="1" cellpadding="6">
+			<thead>
+				<tr>
+					<th>Check</th>
+					<th>Actual</th>
+					<th>Result</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for check in checks %}
+					<tr>
+						<td>{{ check.label }}</td>
+						<td>{{ check.actual }}</td>
+						<td>{{ check.pass ? 'PASS' : 'FAIL' }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<h2>Rendered markup</h2>
+		<pre>
+default: {{ widget|trim }}
+options: {{ customWidget|trim }}
+		</pre>
+
+		<h2>Live widget</h2>
+		<p>
+			The widget below fetches a challenge from <code>{{ challengeUrl }}</code> in the
+			browser and solves it. That client-side round trip is the real end-to-end
+			check: if the widget reaches &ldquo;verified&rdquo;, the challenge endpoint works.
+			The server-side checks above can&rsquo;t prove that on their own.
+		</p>
+		<form method="post" action="">
+			{{ craft.altcha.renderWidget() }}
+		</form>
+	</body>
+</html>
