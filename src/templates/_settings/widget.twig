@@ -4,10 +4,89 @@
 {% extends 'altcha/_settings/_layout' %}
 
 {% import '_includes/forms.twig' as forms %}
-{% from 'altcha/_settings/_macros' import configWarning %}
+{% import 'jalendport-base/_macros' as base %}
 
 {% block settingsHtml %}
 
+	{{ forms.selectField({
+		first: true,
+		label: 'Display mode'|t('altcha'),
+		instructions: 'How the widget appears in your forms. “Invisible” solves the challenge in the background with no visible checkbox, so pair it with an auto-solve mode.'|t('altcha'),
+		id: 'widgetDisplay',
+		name: 'widgetDisplay',
+		options: [
+			{ label: 'Standard'|t('altcha'), value: 'standard' },
+			{ label: 'Bar'|t('altcha'), value: 'bar' },
+			{ label: 'Floating'|t('altcha'), value: 'floating' },
+			{ label: 'Overlay'|t('altcha'), value: 'overlay' },
+			{ label: 'Invisible'|t('altcha'), value: 'invisible' },
+		],
+		value: settings.widgetDisplay,
+		disabled: readOnly or 'widgetDisplay' in overrides,
+		errors: settings.getErrors('widgetDisplay'),
+		warning: base.configWarning('widgetDisplay', 'altcha'),
+	}) }}
 
+	{{ forms.selectField({
+		label: 'Auto-solve'|t('altcha'),
+		instructions: 'When the widget starts solving its challenge. Leave this off to have visitors start it themselves by checking the box.'|t('altcha'),
+		id: 'widgetAuto',
+		name: 'widgetAuto',
+		options: [
+			{ label: 'Off'|t('altcha'), value: 'off' },
+			{ label: 'On focus'|t('altcha'), value: 'onfocus' },
+			{ label: 'On load'|t('altcha'), value: 'onload' },
+			{ label: 'On submit'|t('altcha'), value: 'onsubmit' },
+		],
+		value: settings.widgetAuto,
+		disabled: readOnly or 'widgetAuto' in overrides,
+		errors: settings.getErrors('widgetAuto'),
+		warning: base.configWarning('widgetAuto', 'altcha'),
+	}) }}
+
+	{{ forms.selectField({
+		label: 'Theme'|t('altcha'),
+		instructions: 'The widget’s color scheme. “Automatic” follows the visitor’s system preference.'|t('altcha'),
+		id: 'widgetTheme',
+		name: 'widgetTheme',
+		options: [
+			{ label: 'Automatic'|t('altcha'), value: '' },
+			{ label: 'Light'|t('altcha'), value: 'light' },
+			{ label: 'Dark'|t('altcha'), value: 'dark' },
+		],
+		value: settings.widgetTheme,
+		disabled: readOnly or 'widgetTheme' in overrides,
+		errors: settings.getErrors('widgetTheme'),
+		warning: base.configWarning('widgetTheme', 'altcha'),
+	}) }}
+
+	{{ forms.lightswitchField({
+		label: 'Hide the ALTCHA logo'|t('altcha'),
+		instructions: 'Hides the ALTCHA logo inside the widget.'|t('altcha'),
+		name: 'widgetHideLogo',
+		on: settings.widgetHideLogo,
+		disabled: readOnly or 'widgetHideLogo' in overrides,
+		warning: base.configWarning('widgetHideLogo', 'altcha'),
+	}) }}
+
+	{{ forms.lightswitchField({
+		label: 'Hide the widget footer'|t('altcha'),
+		instructions: 'Hides the “Protected by ALTCHA” footer beneath the widget.'|t('altcha'),
+		name: 'widgetHideFooter',
+		on: settings.widgetHideFooter,
+		disabled: readOnly or 'widgetHideFooter' in overrides,
+		warning: base.configWarning('widgetHideFooter', 'altcha'),
+	}) }}
+
+	<hr>
+
+	{{ forms.lightswitchField({
+		label: 'Register the widget script'|t('altcha'),
+		instructions: 'Loads the bundled ALTCHA script on any page that renders the widget. Turn this off if you bundle the ALTCHA script into your own front-end JavaScript.'|t('altcha'),
+		name: 'registerWidgetJs',
+		on: settings.registerWidgetJs,
+		disabled: readOnly or 'registerWidgetJs' in overrides,
+		warning: base.configWarning('registerWidgetJs', 'altcha'),
+	}) }}
 
 {% endblock %}

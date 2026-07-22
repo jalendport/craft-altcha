@@ -4,10 +4,113 @@
 {% extends 'altcha/_settings/_layout' %}
 
 {% import '_includes/forms.twig' as forms %}
-{% from 'altcha/_settings/_macros' import configWarning %}
+{% import 'jalendport-base/_macros' as base %}
 
 {% block settingsHtml %}
 
+	{% set plugins = craft.app.plugins %}
+	{% set missingPluginNote = 'This integration stays dormant until the plugin it protects is installed and enabled.'|t('altcha') %}
 
+	{{ forms.lightswitchField({
+		first: true,
+		label: 'Comments'|t('altcha'),
+		instructions: 'Requires a solved challenge on front-end comments submitted through the Comments plugin.'|t('altcha'),
+		name: 'enableComments',
+		on: settings.enableComments,
+		disabled: readOnly or 'enableComments' in overrides,
+		tip: plugins.isPluginEnabled('comments') ? null : missingPluginNote,
+		warning: base.configWarning('enableComments', 'altcha'),
+	}) }}
+
+	{{ forms.lightswitchField({
+		label: 'Contact Form'|t('altcha'),
+		instructions: 'Requires a solved challenge on messages sent through the Contact Form plugin.'|t('altcha'),
+		name: 'enableContactForm',
+		on: settings.enableContactForm,
+		disabled: readOnly or 'enableContactForm' in overrides,
+		tip: plugins.isPluginEnabled('contact-form') ? null : missingPluginNote,
+		warning: base.configWarning('enableContactForm', 'altcha'),
+	}) }}
+
+	{{ forms.lightswitchField({
+		label: 'Guest Entries'|t('altcha'),
+		instructions: 'Requires a solved challenge on entries submitted through the Guest Entries plugin.'|t('altcha'),
+		name: 'enableGuestEntries',
+		on: settings.enableGuestEntries,
+		disabled: readOnly or 'enableGuestEntries' in overrides,
+		tip: plugins.isPluginEnabled('guest-entries') ? null : missingPluginNote,
+		warning: base.configWarning('enableGuestEntries', 'altcha'),
+	}) }}
+
+	{{ forms.lightswitchField({
+		label: 'User registration'|t('altcha'),
+		instructions: 'Requires a solved challenge on Craft’s own front-end registration form.'|t('altcha'),
+		name: 'enableUserRegistration',
+		on: settings.enableUserRegistration,
+		disabled: readOnly or 'enableUserRegistration' in overrides,
+		toggle: 'user-account-forms',
+		warning: base.configWarning('enableUserRegistration', 'altcha'),
+	}) }}
+
+	<div id="user-account-forms" class="nested-fields{% if not settings.enableUserRegistration %} hidden{% endif %}">
+		{{ forms.lightswitchField({
+			label: 'Protect the login form'|t('altcha'),
+			instructions: 'Also requires a solved challenge on Craft’s front-end login form.'|t('altcha'),
+			name: 'protectLogin',
+			on: settings.protectLogin,
+			disabled: readOnly or 'protectLogin' in overrides,
+			warning: base.configWarning('protectLogin', 'altcha'),
+		}) }}
+
+		{{ forms.lightswitchField({
+			label: 'Protect the forgot-password form'|t('altcha'),
+			instructions: 'Also requires a solved challenge on Craft’s front-end password reset form.'|t('altcha'),
+			name: 'protectForgotPassword',
+			on: settings.protectForgotPassword,
+			disabled: readOnly or 'protectForgotPassword' in overrides,
+			warning: base.configWarning('protectForgotPassword', 'altcha'),
+		}) }}
+	</div>
+
+	{% if plugins.isPluginEnabled('formie') %}
+		<p class="light">{{ 'Formie forms are protected from Formie’s own captcha settings, not here.'|t('altcha') }}</p>
+	{% endif %}
+
+	<hr>
+
+	{{ forms.lightswitchField({
+		label: 'Blanket mode'|t('altcha'),
+		instructions: 'Requires a solved challenge on any front-end POST to the action paths you list below. Use this for form plugins with no integration of their own, such as Freeform and Campaign.'|t('altcha'),
+		name: 'enableBlanketMode',
+		on: settings.enableBlanketMode,
+		disabled: readOnly or 'enableBlanketMode' in overrides,
+		toggle: 'blanket-mode-settings',
+		warning: base.configWarning('enableBlanketMode', 'altcha'),
+	}) }}
+
+	<div id="blanket-mode-settings" class="nested-fields{% if not settings.enableBlanketMode %} hidden{% endif %}">
+		{{ forms.editableTableField({
+			label: 'Allowed action paths'|t('altcha'),
+			instructions: 'One controller action path per row, such as `freeform/submit`. End a path with `*` to match everything beneath it, such as `campaign/forms/*`. Altcha’s own action paths are never enforced.'|t('altcha'),
+			id: 'blanketActionAllowlist',
+			name: 'blanketActionAllowlist',
+			cols: {
+				path: {
+					type: 'singleline',
+					heading: 'Action path'|t('altcha'),
+					placeholder: 'freeform/submit',
+					code: true,
+				},
+			},
+			rows: settings.blanketActionAllowlist|map(path => { path: path }),
+			allowAdd: true,
+			allowDelete: true,
+			allowReorder: true,
+			addRowLabel: 'Add an action path'|t('altcha'),
+			static: readOnly or 'blanketActionAllowlist' in overrides,
+			errors: settings.getErrors('blanketActionAllowlist'),
+			warning: base.configWarning('blanketActionAllowlist', 'altcha'),
+		}) }}
+	</div>
 
 {% endblock %}

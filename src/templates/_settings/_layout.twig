@@ -6,7 +6,7 @@
 
 {% set title = plugin.name %}
 {% set docTitle = title ~ ' - ' ~ "Plugins"|t('app') %}
-{% set readOnly = readOnly ?? false %}
+{% set readOnly = not craft.app.config.general.allowAdminChanges %}
 {% set fullPageForm = not readOnly %}
 
 {% set crumbs = [
@@ -39,6 +39,7 @@
 {% endblock %}
 
 {% set settings = variables.settings %}
+{% set overrides = variables.overrides %}
 
 {% block content %}
 
@@ -46,7 +47,9 @@
 		<h2>{{ variables.navItems[selectedTab].title }}</h2>
 	{% endif %}
 
-	{% if not readOnly %}
+	{% if readOnly %}
+		<p class="warning with-icon">{{ 'These settings are read-only because administrative changes are disallowed in this environment.'|t('altcha') }}</p>
+	{% else %}
 		{{ actionInput('plugins/save-plugin-settings') }}
 		{{ hiddenInput('pluginHandle', plugin.handle) }}
 	{% endif %}
@@ -56,8 +59,10 @@
 		{% endblock %}
 	{% endnamespace %}
 
-	<hr>
+	{% if not readOnly %}
+		<hr>
 
-	<button type="submit" class="btn submit">{{ 'Save'|t('app') }}</button>
+		<button type="submit" class="btn submit">{{ 'Save'|t('app') }}</button>
+	{% endif %}
 
 {% endblock %}

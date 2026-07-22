@@ -10,12 +10,10 @@
 
 namespace jalendport\altcha\controllers;
 
-use Craft;
 use craft\web\Controller;
 use craft\web\View;
 use jalendport\altcha\Altcha;
-use yii\web\BadRequestHttpException;
-use yii\web\MethodNotAllowedHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
 /**
@@ -41,16 +39,26 @@ class SettingsController extends Controller
 
     /**
      * @inheritdoc
+     * @throws ForbiddenHttpException if the user isn't an admin
      */
     public function beforeAction($action): bool
     {
+        if (!parent::beforeAction($action)) {
+            return false;
+        }
+
+        // The HMAC key lives on these pages, so admins only. Passing false
+        // keeps them viewable (read-only) where admin changes are disallowed.
+        $this->requireAdmin(false);
+
         $this->_variables = [
             'plugin' => Altcha::$plugin,
             'settings' => Altcha::$plugin->getSettings(),
             'navItems' => Altcha::$plugin->getSettingsNavItems(),
+            'overrides' => Altcha::$plugin->getConfigOverrides(),
         ];
 
-        return parent::beforeAction($action);
+        return true;
     }
 
     /**
@@ -107,50 +115,5 @@ class SettingsController extends Controller
         $variables = $this->_variables;
 
         return $this->renderTemplate('altcha/_settings/widget', compact('variables'), View::TEMPLATE_MODE_CP);
-    }
-
-    /**
-     * Saves the plugin settings.
-     *
-     * @return Response|null a redirect on success, or null to re-render with errors
-     * @throws MethodNotAllowedHttpException if the request isn't a POST
-     * @throws BadRequestHttpException if the request is malformed
-     * @author Jalen Davenport <hello@jalendport.com>
-     * @since 1.0.0
-     */
-    public function actionSaveSettings(): ?Response
-    {
-        $this->requirePostRequest();
-
-        $request = $this->request;
-
-        $settings = Altcha::$plugin->getSettings();
-        $settings->setAttributes($request->getParam('settings'), false);
-
-        if (!$settings->validate()) {
-            $this->setFailFlash(Craft::t('altcha', 'Couldn’t save settings.'));
-
-            Craft::$app->getUrlManager()->setRouteParams([
-                'settings' => $settings,
-            ]);
-
-            return null;
-        }
-
-        $pluginSettingsSaved = Craft::$app->getPlugins()->savePluginSettings(Altcha::$plugin, $settings->toArray());
-
-        if (!$pluginSettingsSaved) {
-            $this->setFailFlash(Craft::t('altcha', 'Couldn’t save settings.'));
-
-            Craft::$app->getUrlManager()->setRouteParams([
-                'settings' => $settings,
-            ]);
-
-            return null;
-        }
-
-        $this->setSuccessFlash(Craft::t('altcha', 'Settings saved.'));
-
-        return $this->redirectToPostedUrl();
     }
 }

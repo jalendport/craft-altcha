@@ -137,6 +137,28 @@ class Settings extends Model
      */
     public string $widgetTheme = '';
 
+    // Public Methods
+    // =========================================================================
+
+    /**
+     * @inheritdoc
+     *
+     * Normalizes `blanketActionAllowlist` on the way in, so the control panel's
+     * editable table (which posts a row hash per path, and an empty string when
+     * it has no rows) and a flat `config/altcha.php` array both land as a plain
+     * list of action paths.
+     *
+     * @since 1.0.0
+     */
+    public function setAttributes($values, $safeOnly = true): void
+    {
+        if (isset($values['blanketActionAllowlist'])) {
+            $values['blanketActionAllowlist'] = self::_normalizeAllowlist($values['blanketActionAllowlist']);
+        }
+
+        parent::setAttributes($values, $safeOnly);
+    }
+
     // Protected Methods
     // =========================================================================
 
@@ -179,5 +201,41 @@ class Settings extends Model
         $rules[] = ['blanketActionAllowlist', 'safe'];
 
         return $rules;
+    }
+
+    // Private Methods
+    // =========================================================================
+
+    /**
+     * Reduces a posted or configured allowlist to a list of trimmed, unique
+     * action paths.
+     *
+     * @param mixed $value the raw value: a list of paths, a list of table rows,
+     * or a newline-separated string
+     * @return string[] the normalized action paths
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
+    private static function _normalizeAllowlist(mixed $value): array
+    {
+        if (is_string($value)) {
+            $value = preg_split('/[\r\n]+/', $value) ?: [];
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $paths = [];
+
+        foreach ($value as $row) {
+            $path = is_array($row) ? reset($row) : $row;
+
+            if (is_string($path) && trim($path) !== '') {
+                $paths[] = trim($path);
+            }
+        }
+
+        return array_values(array_unique($paths));
     }
 }

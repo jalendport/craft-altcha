@@ -4,57 +4,54 @@
 {% extends 'altcha/_settings/_layout' %}
 
 {% import '_includes/forms.twig' as forms %}
-{% from 'altcha/_settings/_macros' import configWarning %}
+{% import 'jalendport-base/_macros' as base %}
 
 {% block settingsHtml %}
 
 	{{ forms.autosuggestField({
-		label: 'HMAC Key' | t('altcha'),
-		instructions: 'A unique key used to create a signature based on the challenge. Use `php craft altcha/generate-hmac-key` to create one.' | t('altcha'),
+		first: true,
+		label: 'HMAC key'|t('altcha'),
+		instructions: 'The secret key used to sign and verify challenges. Run `php craft altcha/generate-hmac-key` to generate one.'|t('altcha'),
 		suggestEnvVars: true,
 		name: 'hmacKey',
 		value: settings.hmacKey,
 		required: true,
-		warning: configWarning('hmacKey'),
-		tip: 'This ought to be set to an environment variable.'|t('altcha') ~ ' ' ~ tag('a', {
-			href: 'https://craftcms.com/docs/5.x/configure.html#control-panel-settings',
-			class: 'go',
-			text: 'Learn more'|t('app'),
-		}),
+		disabled: readOnly or 'hmacKey' in overrides,
 		errors: settings.getErrors('hmacKey'),
+		warning: base.configWarning('hmacKey', 'altcha'),
 	}) }}
 
-	<hr>
-
 	{{ forms.selectField({
-		label: 'Complexity' | t('altcha'),
-		instructions: 'Select the complexity of the Altcha mechanism. Learn more [here](https://altcha.org/docs/v2/complexity/).' | t('altcha'),
+		label: 'Complexity'|t('altcha'),
+		instructions: 'How much work a visitor’s browser spends solving a challenge. Higher settings cost bots more, but also slow real visitors down on older devices.'|t('altcha'),
 		id: 'complexity',
 		name: 'complexity',
 		options: [
-			{
-				label: 'Low',
-				value: 1000,
-			},
-			{
-				label: 'Medium',
-				value: 50000,
-			},
-			{
-				label: 'High',
-				value: 100000,
-			}
+			{ label: 'Low'|t('altcha'), value: 1000 },
+			{ label: 'Medium'|t('altcha'), value: 50000 },
+			{ label: 'High'|t('altcha'), value: 100000 },
 		],
 		value: settings.complexity,
-		warning: configWarning('complexity', 'altcha'),
+		disabled: readOnly or 'complexity' in overrides,
+		errors: settings.getErrors('complexity'),
+		warning: base.configWarning('complexity', 'altcha'),
 	}) }}
 
-	{{ forms.lightswitchField({
-		label: 'Register Widget JS' | t('altcha'),
-		instructions: 'Enable this option to register the Altcha widget JS on your frontend. Disable if you’re already importing the Altcha script into your frontend’s JS.' | t('altcha'),
-		name: 'registerWidgetJs',
-		on: settings.registerWidgetJs,
-		warning: configWarning('registerWidgetJs', 'altcha'),
+	{{ forms.textField({
+		type: 'number',
+		label: 'Challenge expiry'|t('altcha'),
+		instructions: 'How long an issued challenge stays valid. Anything from 20 to 60 minutes suits most forms.'|t('altcha'),
+		id: 'challengeExpiryMinutes',
+		name: 'challengeExpiryMinutes',
+		value: settings.challengeExpiryMinutes,
+		size: 5,
+		min: 1,
+		max: 1440,
+		step: 1,
+		suffix: 'minutes'|t('altcha'),
+		disabled: readOnly or 'challengeExpiryMinutes' in overrides,
+		errors: settings.getErrors('challengeExpiryMinutes'),
+		warning: base.configWarning('challengeExpiryMinutes', 'altcha'),
 	}) }}
 
 {% endblock %}
