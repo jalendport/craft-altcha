@@ -2,7 +2,7 @@
   "name": "jalendport/craft-altcha",
   "description": "Integrate Altcha's privacy-first spam protection into your Craft CMS forms.",
   "type": "craft-plugin",
-  "license": "mit",
+  "license": "MIT",
   "keywords": [
     "craft",
     "cms",
