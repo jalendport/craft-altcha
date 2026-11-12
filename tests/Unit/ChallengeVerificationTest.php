@@ -43,6 +43,28 @@ test('challenge solutions cannot be replayed', function(): void {
         ->and($service->verifySolution($payload))->toBeFalse();
 });
 
+test('re-encoded challenge solutions cannot be replayed', function(): void {
+    $service = altchaService(cache: new yii\caching\ArrayCache());
+    $challenge = $service->createChallenge();
+
+    if (!$challenge instanceof Challenge) {
+        throw new RuntimeException('Challenge issuance failed.');
+    }
+
+    $payload = altchaSolve($challenge);
+    $json = base64_decode($payload, true);
+    $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+    $extraKey = $data;
+    $extraKey['extra'] = 'ignored';
+    $reordered = $data;
+    $reordered['solution'] = array_reverse($reordered['solution'], true);
+
+    expect($service->verifySolution($payload))->toBeTrue()
+        ->and($service->verifySolution(base64_encode($json . ' ')))->toBeFalse()
+        ->and($service->verifySolution(base64_encode(json_encode($extraKey, JSON_THROW_ON_ERROR))))->toBeFalse()
+        ->and($service->verifySolution(base64_encode(json_encode($reordered, JSON_THROW_ON_ERROR))))->toBeFalse();
+});
+
 test('unusable HMAC keys fail closed', function(string $hmacKey): void {
     $service = altchaService($hmacKey);
 

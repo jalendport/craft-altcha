@@ -309,9 +309,9 @@ class Altcha extends Component
      * Verifies a solution payload posted by the widget.
      *
      * Fails closed on a misconfigured HMAC key, a malformed payload, and an
-     * already-consumed payload (replay). A payload is only ever accepted once:
-     * on the first successful verification it is registered in the cache, and
-     * any later attempt with the same payload is rejected as a replay.
+     * already-consumed challenge (replay). A challenge is only accepted once:
+     * on the first successful verification its signature is registered in the
+     * cache, and any later solution for that challenge is rejected as a replay.
      *
      * @param string $payload the base64-encoded payload from the widget
      * @return bool whether the solution is valid and unused
@@ -330,10 +330,11 @@ class Altcha extends Component
         $client = new AltchaClient(hmacSignatureSecret: $hmacKey);
 
         try {
-            $result = $client->verifySolution(new VerifySolutionOptions(
+            $options = new VerifySolutionOptions(
                 payload: $payload,
                 algorithm: new Pbkdf2(),
-            ));
+            );
+            $result = $client->verifySolution($options);
         } catch (InvalidArgumentException) {
             // The payload couldn't be parsed (bad base64, invalid JSON, or
             // missing fields) — treat it as a failed verification.
@@ -344,7 +345,13 @@ class Altcha extends Component
             return false;
         }
 
-        return $this->_registerConsumed($payload);
+        $signature = $options->payload->challenge->signature;
+
+        if ($signature === null || $signature === '') {
+            return false;
+        }
+
+        return $this->_registerConsumed($signature);
     }
 
     // Private Methods
@@ -374,19 +381,19 @@ class Altcha extends Component
     }
 
     /**
-     * Registers a verified payload as consumed for replay protection.
+     * Registers a verified challenge as consumed for replay protection.
      *
      * {@see \yii\caching\CacheInterface::add()} returns false when the key
-     * already exists, which means this exact solution was already accepted.
+     * already exists, which means this challenge was already accepted.
      *
-     * @param string $payload the verified payload
-     * @return bool whether the payload was newly registered (false on replay)
+     * @param string $signature the verified challenge signature
+     * @return bool whether the challenge was newly registered (false on replay)
      * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
-    private function _registerConsumed(string $payload): bool
+    private function _registerConsumed(string $signature): bool
     {
-        $cacheKey = 'altcha:consumed:' . hash('sha256', $payload);
+        $cacheKey = 'altcha:consumed:' . $signature;
         // Outlive the challenge's own expiry by a margin so a replay can't slip
         // through between expiry and cache eviction.
         $duration = $this->getSettings()->challengeExpiryMinutes * 60 + 300;
