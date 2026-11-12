@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Updated the bundled ALTCHA widget to 3.6.0, which now shows the details of network and server errors. Translate `widget.error` to show your own text for every error
+- The login and forgot-password toggles are now always visible on the Integrations settings page, because they work independently of the user registration toggle
+
+### Fixed
+- Fixed a bug where a solved challenge could be accepted more than once if its payload was re-encoded
 
 ## 1.0.0 - 2026-07-22
 
