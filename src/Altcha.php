@@ -62,6 +62,12 @@ class Altcha extends Plugin
     public bool $hasCpSettings = true;
 
     /**
+     * @var string the oldest version this plugin can be updated from
+     * @since 1.1.0
+     */
+    public string $minVersionRequired = '1.0.0';
+
+    /**
      * @var string the plugin's schema version
      * @since 1.0.0
      */
