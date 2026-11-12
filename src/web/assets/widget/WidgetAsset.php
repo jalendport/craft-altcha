@@ -17,7 +17,7 @@ use yii\web\View;
  * The front-end ALTCHA widget asset bundle.
  *
  * `dist/altcha.i18n.min.js` is vendored verbatim from the npm package `altcha`
- * version **3.2.1** (`dist/main/altcha.i18n.min.js`). It includes the translations,
+ * version **3.6.0** (`dist/main/altcha.i18n.min.js`). It includes the translations,
  * inlines its own styles and proof-of-work workers, and solves the
  * `PBKDF2/SHA-256` challenges this plugin issues, so no sibling files are
  * needed. Re-vendor by copying the file from a newer tarball and updating the
