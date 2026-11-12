@@ -55,6 +55,12 @@ class Altcha extends Component
     // =========================================================================
 
     /**
+     * @var string the form field that carries the solved payload
+     * @since 1.1.0
+     */
+    public const PAYLOAD_FIELD = 'altcha';
+
+    /**
      * @var string[] the widget string keys supported by the bundled ALTCHA script
      * @since 1.1.0
      */
@@ -431,7 +437,7 @@ class Altcha extends Component
             'challenge' => $this->getChallengeUrl(),
             'language' => Craft::$app->language,
             // Every server-side check reads the payload under this name.
-            'name' => 'altcha',
+            'name' => self::PAYLOAD_FIELD,
         ];
 
         if ($settings->widgetDisplay !== 'standard') {

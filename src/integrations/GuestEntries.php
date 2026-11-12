@@ -13,6 +13,7 @@ namespace jalendport\altcha\integrations;
 use Craft;
 use craft\guestentries\events\SaveEvent;
 use jalendport\altcha\Altcha;
+use jalendport\altcha\services\Altcha as AltchaService;
 
 /**
  * Enforces Altcha on entries submitted through Craft's Guest Entries plugin.
@@ -47,7 +48,7 @@ class GuestEntries
             return;
         }
 
-        $payload = (string)$request->post('altcha');
+        $payload = (string)$request->post(AltchaService::PAYLOAD_FIELD);
 
         if ($payload === '' || !Altcha::$plugin->altcha->verifySolution($payload)) {
             $event->isSpam = true;

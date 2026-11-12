@@ -14,6 +14,7 @@ use Craft;
 use craft\events\ModelEvent;
 use jalendport\altcha\Altcha;
 use jalendport\altcha\events\VerifyCommentEvent;
+use jalendport\altcha\services\Altcha as AltchaService;
 use verbb\comments\elements\Comment;
 use yii\base\Event;
 
@@ -85,11 +86,11 @@ class Comments
             return;
         }
 
-        $payload = (string)$request->post('altcha');
+        $payload = (string)$request->post(AltchaService::PAYLOAD_FIELD);
 
         if ($payload === '' || !Altcha::$plugin->altcha->verifySolution($payload)) {
             $event->isValid = false;
-            $comment->addError('altcha', Craft::t('altcha', 'Altcha verification failed. Please try again.'));
+            $comment->addError(AltchaService::PAYLOAD_FIELD, Craft::t('altcha', 'Altcha verification failed. Please try again.'));
         }
     }
 }

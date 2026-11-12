@@ -13,6 +13,7 @@ namespace jalendport\altcha\integrations;
 use Craft;
 use jalendport\altcha\Altcha;
 use jalendport\altcha\helpers\ActionAllowlist;
+use jalendport\altcha\services\Altcha as AltchaService;
 use yii\base\ActionEvent;
 use yii\web\BadRequestHttpException;
 
@@ -72,7 +73,7 @@ class BlanketMode
             return;
         }
 
-        $payload = (string)$request->post('altcha');
+        $payload = (string)$request->post(AltchaService::PAYLOAD_FIELD);
 
         if ($payload === '' || !Altcha::$plugin->altcha->verifySolution($payload)) {
             throw new BadRequestHttpException(Craft::t('altcha', 'Altcha verification failed. Please try again.'));

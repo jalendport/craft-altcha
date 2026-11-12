@@ -14,6 +14,7 @@ use Craft;
 use craft\helpers\Html;
 use craft\helpers\UrlHelper;
 use jalendport\altcha\Altcha as AltchaPlugin;
+use jalendport\altcha\services\Altcha as AltchaService;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -124,7 +125,7 @@ class Altcha extends Captcha
         // Read through Formie's helper rather than the POST params directly, so
         // GraphQL submissions — which carry captcha data on the submission —
         // verify too.
-        $payload = (string)$this->getCaptchaValue($submission, 'altcha');
+        $payload = (string)$this->getCaptchaValue($submission, AltchaService::PAYLOAD_FIELD);
 
         if ($payload === '') {
             $this->spamReason = Craft::t('altcha', 'Submission was missing an Altcha solution.');
