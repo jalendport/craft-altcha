@@ -158,7 +158,7 @@ A message that fails verification is flagged as spam rather than rejected, which
 
 ### User registration, login, and forgot password
 
-Three separate toggles live under **Settings → Altcha → Integrations**: **User registration**, **Protect the login form**, and **Protect the forgot-password form**. Registration covers Craft's public registration form only — a logged-in user saving their own account isn't held to a challenge.
+Three separate toggles live under **Settings → Altcha → Integrations**: **Craft’s registration form**, **Craft’s login form**, and **Craft’s forgot-password form**. Registration covers Craft's public registration form only — a logged-in user saving their own account isn't held to a challenge.
 
 Add the widget to whichever of your own user form templates you've protected:
 
