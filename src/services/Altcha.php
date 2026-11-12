@@ -21,6 +21,7 @@ use craft\helpers\App;
 use craft\helpers\Json;
 use craft\helpers\Template;
 use craft\helpers\UrlHelper;
+use craft\web\View;
 use InvalidArgumentException;
 use jalendport\altcha\Altcha as AltchaPlugin;
 use jalendport\altcha\models\Settings;
@@ -50,6 +51,33 @@ use yii\caching\CacheInterface;
  */
 class Altcha extends Component
 {
+    // Const Properties
+    // =========================================================================
+
+    /**
+     * @var string[] the widget string keys supported by the bundled ALTCHA script
+     * @since 1.1.0
+     */
+    public const WIDGET_STRING_KEYS = [
+        'ariaLinkLabel',
+        'cancel',
+        'enterCode',
+        'enterCodeAria',
+        'enterCodeFromImage',
+        'error',
+        'expired',
+        'footer',
+        'getAudioChallenge',
+        'label',
+        'loading',
+        'reload',
+        'verificationRequired',
+        'verified',
+        'verify',
+        'verifying',
+        'waitAlert',
+    ];
+
     // Private Properties
     // =========================================================================
 
@@ -177,6 +205,37 @@ class Altcha extends Component
             // Yii dedupes bundles, so rendering several widgets on one page
             // still registers the script once.
             $view->registerAssetBundle(WidgetAsset::class);
+        }
+
+        $overrides = [];
+
+        foreach (self::WIDGET_STRING_KEYS as $key) {
+            $message = 'widget.' . $key;
+            $translation = Craft::t('altcha', $message);
+
+            if ($translation !== $message && $translation !== '') {
+                $overrides[$key] = $translation;
+            }
+        }
+
+        if ($overrides !== []) {
+            $strings = Json::htmlEncode($overrides);
+            $view->registerJs(<<<JS
+                customElements.whenDefined('altcha-widget').then(() => {
+                    if (!globalThis.\$altcha) {
+                        return;
+                    }
+
+                    const i18n = globalThis.\$altcha.i18n;
+                    let languages;
+                    const unsubscribe = i18n.store.subscribe(value => { languages = value; });
+                    unsubscribe();
+                    const overrides = {$strings};
+                    i18n.set(Object.fromEntries(Object.entries(languages).map(([language, text]) => [
+                        language, { ...text, ...overrides },
+                    ])));
+                });
+                JS, View::POS_END, 'altcha-widget-strings');
         }
 
         $oldTemplatesPath = $view->getTemplatesPath();

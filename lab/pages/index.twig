@@ -112,6 +112,7 @@ options: {{ customWidget|trim }}
 	<li><strong>Toggles off:</strong> set every integration toggle to <code>false</code> in <code>config/altcha.php</code> and confirm each page&rsquo;s form submits without an Altcha payload. Revert (or re-run <code>spark lab seed</code>).</li>
 	<li><strong>Fail closed:</strong> set <code>hmacKey</code> to <code>''</code> (or an unset <code>$ENV_REF</code>) and confirm the challenge endpoint errors instead of issuing a challenge. Revert.</li>
 	<li><strong>Widget options:</strong> remove the widget keys from <code>config/altcha.php</code>, then save each display and auto mode in the <a href="/admin/settings/altcha/widget">control panel</a> and confirm this page&rsquo;s rendered markup reflects them.</li>
+	<li><strong>Widget translations:</strong> add <code>'widget.label' =&gt; 'Confirm you are human'</code> to the array returned by the lab instance&rsquo;s <code>translations/en/altcha.php</code> (create the file if needed), then refresh and confirm the live widget shows that label. Remove the entry and confirm ALTCHA&rsquo;s own label returns.</li>
 	<li><strong>Permissions:</strong> confirm <code>editor@lab.test</code> / <code>password</code> (non-admin) cannot open <code>/admin/settings/altcha</code>.</li>
 	<li><strong>Env key flow:</strong> <code>spark lab craft altcha/generate-hmac-key</code>, put the output in the instance&rsquo;s <code>.env</code> as <code>ALTCHA_HMAC_KEY</code>, set <code>hmacKey</code> to <code>'$ALTCHA_HMAC_KEY'</code>, and confirm the live widget above still verifies.</li>
 </ol>

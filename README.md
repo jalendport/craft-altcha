@@ -101,6 +101,24 @@ To force a language for one form, pass the `language` option:
 {{ craft.altcha.renderWidget({ language: 'de' }) }}
 ```
 
+#### Widget text
+
+To change the widget’s text, add translations to your site’s `translations/<language>/altcha.php` file. For example, in `translations/de/altcha.php`:
+
+```php
+<?php
+
+return [
+    'widget.label' => 'Ich bin ein Mensch',
+];
+```
+
+The plugin reads these entries in the current site language. A string with no translation, or an empty translation, keeps ALTCHA’s own translation. An English site uses `translations/en/altcha.php` to change the English words.
+
+The 17 message keys are `widget.ariaLinkLabel`, `widget.cancel`, `widget.enterCode`, `widget.enterCodeAria`, `widget.enterCodeFromImage`, `widget.error`, `widget.expired`, `widget.footer`, `widget.getAudioChallenge`, `widget.label`, `widget.loading`, `widget.reload`, `widget.verify`, `widget.verificationRequired`, `widget.verified`, `widget.verifying`, and `widget.waitAlert`. The `widget.footer` string is HTML; the other strings are text.
+
+These overrides apply to every widget on the page, including Formie forms. The strings use one shared store on the page, so they cannot be set per call to `renderWidget()`. They also apply when you load the ALTCHA script yourself with `registerWidgetJs` set to `false`.
+
 ### Formie
 
 Formie is the only supported form plugin with a captcha API of its own, so Altcha plugs straight into it. Go to **Formie → Settings → Captchas**, enable **Altcha**, and then switch it on for individual forms from each form's own captcha settings.
