@@ -48,29 +48,26 @@
 		name: 'enableUserRegistration',
 		on: settings.enableUserRegistration,
 		disabled: readOnly or 'enableUserRegistration' in overrides,
-		toggle: 'user-account-forms',
 		warning: base.configWarning('enableUserRegistration', 'altcha'),
 	}) }}
 
-	<div id="user-account-forms" class="nested-fields{% if not settings.enableUserRegistration %} hidden{% endif %}">
-		{{ forms.lightswitchField({
-			label: 'Protect the login form'|t('altcha'),
-			instructions: 'Also requires a solved challenge on Craft’s front-end login form.'|t('altcha'),
-			name: 'protectLogin',
-			on: settings.protectLogin,
-			disabled: readOnly or 'protectLogin' in overrides,
-			warning: base.configWarning('protectLogin', 'altcha'),
-		}) }}
+	{{ forms.lightswitchField({
+		label: 'Protect the login form'|t('altcha'),
+		instructions: 'Requires a solved challenge on Craft’s front-end login form.'|t('altcha'),
+		name: 'protectLogin',
+		on: settings.protectLogin,
+		disabled: readOnly or 'protectLogin' in overrides,
+		warning: base.configWarning('protectLogin', 'altcha'),
+	}) }}
 
-		{{ forms.lightswitchField({
-			label: 'Protect the forgot-password form'|t('altcha'),
-			instructions: 'Also requires a solved challenge on Craft’s front-end password reset form.'|t('altcha'),
-			name: 'protectForgotPassword',
-			on: settings.protectForgotPassword,
-			disabled: readOnly or 'protectForgotPassword' in overrides,
-			warning: base.configWarning('protectForgotPassword', 'altcha'),
-		}) }}
-	</div>
+	{{ forms.lightswitchField({
+		label: 'Protect the forgot-password form'|t('altcha'),
+		instructions: 'Requires a solved challenge on Craft’s front-end password reset form.'|t('altcha'),
+		name: 'protectForgotPassword',
+		on: settings.protectForgotPassword,
+		disabled: readOnly or 'protectForgotPassword' in overrides,
+		warning: base.configWarning('protectForgotPassword', 'altcha'),
+	}) }}
 
 	{% if plugins.isPluginEnabled('formie') %}
 		<p class="light">{{ 'Formie forms are protected from Formie’s own captcha settings, not here.'|t('altcha') }}</p>
