@@ -44,7 +44,6 @@ function altchaUsersGate(bool $enableRegistration, mixed $userIdParam): bool
     };
 
     $method = new ReflectionMethod(Users::class, '_isProtected');
-    $method->setAccessible(true);
 
     return $method->invoke(null, 'save-user');
 }
