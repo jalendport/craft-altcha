@@ -16,9 +16,9 @@ use yii\web\View;
 /**
  * The front-end ALTCHA widget asset bundle.
  *
- * `dist/altcha.min.js` is vendored verbatim from the npm package `altcha`
- * version **3.2.1** (`dist/main/altcha.min.js`). That is the standard bundle,
- * which inlines its own styles and proof-of-work workers and solves the
+ * `dist/altcha.i18n.min.js` is vendored verbatim from the npm package `altcha`
+ * version **3.2.1** (`dist/main/altcha.i18n.min.js`). It includes the translations,
+ * inlines its own styles and proof-of-work workers, and solves the
  * `PBKDF2/SHA-256` challenges this plugin issues, so no sibling files are
  * needed. Re-vendor by copying the file from a newer tarball and updating the
  * version above.
@@ -37,7 +37,7 @@ class WidgetAsset extends AssetBundle
     public $js = [
         // The widget is an ES module custom element; deferring keeps it from
         // blocking the parser while still upgrading `<altcha-widget>` on load.
-        ['altcha.min.js', 'type' => 'module', 'defer' => true],
+        ['altcha.i18n.min.js', 'type' => 'module', 'defer' => true],
     ];
 
     /**

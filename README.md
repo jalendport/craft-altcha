@@ -91,6 +91,16 @@ Two of the plugin's settings — hiding the ALTCHA logo and hiding the widget fo
 }) }}
 ```
 
+#### Widget language
+
+The bundled widget includes ALTCHA’s translations. It uses the `language` option first, then `<html lang>`, then the browser languages, with English as the fallback. A regional language code also matches its primary language, so `de-AT` uses German.
+
+To force a language for one form, pass the `language` option:
+
+```twig
+{{ craft.altcha.renderWidget({ language: 'de' }) }}
+```
+
 ### Formie
 
 Formie is the only supported form plugin with a captcha API of its own, so Altcha plugs straight into it. Go to **Formie → Settings → Captchas**, enable **Altcha**, and then switch it on for individual forms from each form's own captcha settings.

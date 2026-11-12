@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+### Added
+- Added ALTCHA’s translations to the bundled widget, which now follows the page’s language ([#1](https://github.com/jalendport/craft-altcha/issues/1))
+
 ## 1.0.0 - 2026-07-22
 
 ### Added
