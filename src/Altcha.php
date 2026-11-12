@@ -34,12 +34,11 @@ use yii\web\Response;
  * `_registerXxx()` methods. Per-plugin file logging, the `@altcha` alias, and
  * the shared settings template root come from {@see \jalendport\base\Plugin}.
  *
- * @author Jalen Davenport <hello@jalendport.com>
- * @since 1.0.0
- *
  * @property-read AltchaService $altcha
  * @property-read Integrations $integrations
  * @method Settings getSettings()
+ * @author Jalen Davenport <hello@jalendport.com>
+ * @since 1.0.0
  */
 class Altcha extends Plugin
 {

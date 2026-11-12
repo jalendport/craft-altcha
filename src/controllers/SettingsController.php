@@ -40,6 +40,8 @@ class SettingsController extends Controller
     /**
      * @inheritdoc
      * @throws ForbiddenHttpException if the user isn't an admin
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
      */
     public function beforeAction($action): bool
     {
@@ -62,20 +64,6 @@ class SettingsController extends Controller
     }
 
     /**
-     * Renders the settings landing page.
-     *
-     * @return Response the rendered page
-     * @author Jalen Davenport <hello@jalendport.com>
-     * @since 1.0.0
-     */
-    public function actionIndex(): Response
-    {
-        $variables = $this->_variables;
-
-        return $this->renderTemplate('altcha/_settings/index', compact('variables'), View::TEMPLATE_MODE_CP);
-    }
-
-    /**
      * Renders the general settings tab.
      *
      * @return Response the rendered tab
@@ -86,7 +74,21 @@ class SettingsController extends Controller
     {
         $variables = $this->_variables;
 
-        return $this->renderTemplate('altcha/_settings/general', compact('variables'), View::TEMPLATE_MODE_CP);
+        return $this->renderTemplate('altcha/_settings/general', compact('variables'), templateMode: View::TEMPLATE_MODE_CP);
+    }
+
+    /**
+     * Renders the settings landing page.
+     *
+     * @return Response the rendered page
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.0.0
+     */
+    public function actionIndex(): Response
+    {
+        $variables = $this->_variables;
+
+        return $this->renderTemplate('altcha/_settings/index', compact('variables'), templateMode: View::TEMPLATE_MODE_CP);
     }
 
     /**
@@ -100,7 +102,7 @@ class SettingsController extends Controller
     {
         $variables = $this->_variables;
 
-        return $this->renderTemplate('altcha/_settings/integrations', compact('variables'), View::TEMPLATE_MODE_CP);
+        return $this->renderTemplate('altcha/_settings/integrations', compact('variables'), templateMode: View::TEMPLATE_MODE_CP);
     }
 
     /**
@@ -114,6 +116,6 @@ class SettingsController extends Controller
     {
         $variables = $this->_variables;
 
-        return $this->renderTemplate('altcha/_settings/widget', compact('variables'), View::TEMPLATE_MODE_CP);
+        return $this->renderTemplate('altcha/_settings/widget', compact('variables'), templateMode: View::TEMPLATE_MODE_CP);
     }
 }

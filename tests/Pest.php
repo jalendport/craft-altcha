@@ -39,7 +39,7 @@ function altchaSolve(Challenge $challenge): string
 
     for ($counter = 0; $counter <= 100000; $counter++) {
         $password = $nonce . pack('N', $counter);
-        $derivedKey = $algorithm->deriveKey($parameters, $salt, $password)->derivedKey;
+        $derivedKey = $algorithm->deriveKey($parameters, $salt, password: $password)->derivedKey;
 
         if (substr($derivedKey, 0, $keyPrefixLength) === $keyPrefix) {
             return (new Payload(

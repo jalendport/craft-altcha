@@ -16,6 +16,7 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use Twig\Markup;
 use yii\base\Exception;
+use yii\base\InvalidConfigException;
 
 /**
  * Exposes the Altcha service to templates as `craft.altcha`. Every method is a
@@ -50,6 +51,8 @@ class AltchaVariable
      * @throws RuntimeError if rendering the widget template fails
      * @throws SyntaxError if the widget template has a syntax error
      * @throws Exception if the templates path can't be resolved
+     * @throws InvalidConfigException if the widget asset bundle can't be
+     * registered
      * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */

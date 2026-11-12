@@ -51,6 +51,7 @@ class Altcha extends Captcha
 
     /**
      * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function getDescription(): string
@@ -66,6 +67,7 @@ class Altcha extends Captcha
      * @throws Exception if the templates path can't be resolved
      * @throws InvalidConfigException if the widget asset bundle can't be
      * registered
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function getFrontEndHtml(Form $form, ?FieldLayoutPage $page = null): string
@@ -76,11 +78,11 @@ class Altcha extends Captcha
     }
 
     /**
-     * @inheritdoc
-     *
      * Formie's default publishes an icon from its own asset bundle, which has
      * nothing under this plugin's handle — so inline our own instead.
      *
+     * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function getIconUrl(): string
@@ -97,6 +99,7 @@ class Altcha extends Captcha
 
     /**
      * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function getName(): string
@@ -106,6 +109,7 @@ class Altcha extends Captcha
 
     /**
      * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function getSettingsHtml(): string
@@ -113,11 +117,12 @@ class Altcha extends Captcha
         $link = Html::a(Craft::t('altcha', 'Altcha plugin settings page'), UrlHelper::cpUrl('settings/altcha'));
         $note = Craft::t('altcha', 'Altcha settings can be updated on the {link}.', ['link' => $link]);
 
-        return Html::tag('div', Html::tag('blockquote', $note, ['class' => 'note tip']), ['class' => 'readable']);
+        return Html::tag('div', Html::tag('blockquote', $note, options: ['class' => 'note tip']), options: ['class' => 'readable']);
     }
 
     /**
      * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function validateSubmission(Submission $submission): bool

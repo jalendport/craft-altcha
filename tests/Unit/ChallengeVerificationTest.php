@@ -60,7 +60,7 @@ test('re-encoded challenge solutions cannot be replayed', function(): void {
     $reordered['solution'] = array_reverse($reordered['solution'], true);
 
     expect($service->verifySolution($payload))->toBeTrue()
-        ->and($service->verifySolution(base64_encode($json . ' ')))->toBeFalse()
+        ->and($service->verifySolution(base64_encode("$json ")))->toBeFalse()
         ->and($service->verifySolution(base64_encode(json_encode($extraKey, JSON_THROW_ON_ERROR))))->toBeFalse()
         ->and($service->verifySolution(base64_encode(json_encode($reordered, JSON_THROW_ON_ERROR))))->toBeFalse();
 });

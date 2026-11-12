@@ -184,13 +184,13 @@ class Settings extends Model
     }
 
     /**
-     * @inheritdoc
-     *
      * Normalizes `blanketActionAllowlist` on the way in, so the control panel's
      * editable table (which posts a row hash per path, and an empty string when
      * it has no rows) and a flat `config/altcha.php` array both land as a plain
      * list of action paths.
      *
+     * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     public function setAttributes($values, $safeOnly = true): void
@@ -250,6 +250,7 @@ class Settings extends Model
 
     /**
      * @inheritdoc
+     * @author Jalen Davenport <hello@jalendport.com>
      * @since 1.0.0
      */
     protected function defineRules(): array

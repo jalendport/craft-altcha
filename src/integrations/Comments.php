@@ -29,7 +29,7 @@ use yii\base\Event;
  */
 class Comments
 {
-    // Constants
+    // Const Properties
     // =========================================================================
 
     /**

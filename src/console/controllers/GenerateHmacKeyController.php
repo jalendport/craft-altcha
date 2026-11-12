@@ -73,19 +73,19 @@ class GenerateHmacKeyController extends Controller
         $path = $configService->getDotEnvPath();
 
         if (!file_exists($path)) {
-            if (!$this->interactive || $this->confirm(PHP_EOL . "A .env file doesn't exist at $path. Would you like to create one?", true)) {
-                try {
-                    FileHelper::writeToFile($path, '');
-                } catch (Throwable $e) {
-                    $this->stderr("Unable to create $path: {$e->getMessage()}" . PHP_EOL, Console::FG_RED);
-                    return false;
-                }
-
-                $this->stdout("$path created. Note you still need to set up PHP dotenv for its values to take effect." . PHP_EOL, Console::FG_YELLOW);
-            } else {
+            if ($this->interactive && !$this->confirm(PHP_EOL . "A .env file doesn't exist at $path. Would you like to create one?", true)) {
                 $this->stdout(PHP_EOL . 'Action aborted.' . PHP_EOL, Console::FG_YELLOW);
                 return false;
             }
+
+            try {
+                FileHelper::writeToFile($path, '');
+            } catch (Throwable $e) {
+                $this->stderr("Unable to create $path: {$e->getMessage()}" . PHP_EOL, Console::FG_RED);
+                return false;
+            }
+
+            $this->stdout("$path created. Note you still need to set up PHP dotenv for its values to take effect." . PHP_EOL, Console::FG_YELLOW);
         }
 
         try {

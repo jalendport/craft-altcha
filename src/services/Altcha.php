@@ -229,7 +229,7 @@ class Altcha extends Component
         $overrides = [];
 
         foreach (self::WIDGET_STRING_KEYS as $key) {
-            $message = 'widget.' . $key;
+            $message = "widget.$key";
             $translation = Craft::t('altcha', $message, [], $language);
 
             if ($translation !== $message && $translation !== '') {
@@ -265,7 +265,7 @@ class Altcha extends Component
                         globalThis.\$altcha.defaults.set({ formatError: () => null });
                     }
                 });
-                JS, View::POS_END, 'altcha-widget-strings-' . $languageCode);
+                JS, position: View::POS_END, key: "altcha-widget-strings-$languageCode");
         }
 
         $oldTemplatesPath = $view->getTemplatesPath();
@@ -399,12 +399,12 @@ class Altcha extends Component
      */
     private function _registerConsumed(string $signature): bool
     {
-        $cacheKey = 'altcha:consumed:' . $signature;
+        $cacheKey = "altcha:consumed:$signature";
         // Outlive the challenge's own expiry by a margin so a replay can't slip
         // through between expiry and cache eviction.
         $duration = $this->getSettings()->challengeExpiryMinutes * 60 + 300;
 
-        if (!$this->getCache()->add($cacheKey, 1, $duration)) {
+        if (!$this->getCache()->add($cacheKey, 1, duration: $duration)) {
             AltchaPlugin::info('Altcha rejected a replayed solution.');
             return false;
         }

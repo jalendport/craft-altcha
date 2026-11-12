@@ -4,11 +4,6 @@ use jalendport\altcha\Altcha as AltchaPlugin;
 use jalendport\altcha\integrations\Users;
 use jalendport\altcha\services\Altcha as AltchaService;
 
-/**
- * Wires up the two globals `Users::_isProtected()` reads — the plugin's settings
- * and the request's `userId` param — so the private gate can be exercised
- * without booting Craft.
- */
 function altchaUsersGate(bool $enableRegistration, mixed $userIdParam): bool
 {
     $settings = altchaSettings();
@@ -48,11 +43,7 @@ function altchaUsersGate(bool $enableRegistration, mixed $userIdParam): bool
     return $method->invoke(null, 'save-user');
 }
 
-// Craft treats a falsy `userId` as a new public registration ($isNewUser =
-// !$userId), so every falsy value must be held to a challenge — a strict
-// null-only check would let a bot skip verification by posting `userId=` or
-// `userId=0`.
-test('registration is protected regardless of userId shape', function(mixed $userIdParam): void {
+test('Craft treats each falsy userId as a new registration that requires protection', function(mixed $userIdParam): void {
     expect(altchaUsersGate(true, $userIdParam))->toBeTrue();
 })->with([
     'absent' => [null],
