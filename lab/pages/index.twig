@@ -50,8 +50,8 @@
 	{ label: 'Comments integration on', pass: settings and settings.enableComments, actual: settings ? (settings.enableComments ? 'on' : 'off') : 'n/a' },
 	{ label: 'Contact Form integration on', pass: settings and settings.enableContactForm, actual: settings ? (settings.enableContactForm ? 'on' : 'off') : 'n/a' },
 	{ label: 'User registration protection on', pass: settings and settings.enableUserRegistration, actual: settings ? (settings.enableUserRegistration ? 'on' : 'off') : 'n/a' },
-	{ label: 'Login protection on', pass: settings and settings.protectLogin, actual: settings ? (settings.protectLogin ? 'on' : 'off') : 'n/a' },
-	{ label: 'Forgot-password protection on', pass: settings and settings.protectForgotPassword, actual: settings ? (settings.protectForgotPassword ? 'on' : 'off') : 'n/a' },
+	{ label: 'Login protection on', pass: settings and settings.enableUserLogin, actual: settings ? (settings.enableUserLogin ? 'on' : 'off') : 'n/a' },
+	{ label: 'Forgot-password protection on', pass: settings and settings.enableUserForgotPassword, actual: settings ? (settings.enableUserForgotPassword ? 'on' : 'off') : 'n/a' },
 	{ label: 'Guest Entries integration on', pass: settings and settings.enableGuestEntries, actual: settings ? (settings.enableGuestEntries ? 'on' : 'off') : 'n/a' },
 	{ label: 'Blanket mode on, allowlisting entries/save-entry', pass: settings and settings.enableBlanketMode and 'entries/save-entry' in settings.blanketActionAllowlist, actual: settings ? (settings.enableBlanketMode ? settings.blanketActionAllowlist|join(', ') : 'off') : 'n/a' },
 ]) %}

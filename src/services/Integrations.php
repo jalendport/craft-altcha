@@ -211,7 +211,7 @@ class Integrations extends Component
     {
         $settings = AltchaPlugin::$plugin->getSettings();
 
-        if (!$settings->enableUserRegistration && !$settings->protectLogin && !$settings->protectForgotPassword) {
+        if (!$settings->enableUserRegistration && !$settings->enableUserLogin && !$settings->enableUserForgotPassword) {
             return;
         }
 

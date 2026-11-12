@@ -12,8 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Added support for overriding the widget’s text from the site’s `altcha` translation files ([#1](https://github.com/jalendport/craft-altcha/issues/1))
 
 ### Changed
+- Renamed the `protectLogin` and `protectForgotPassword` settings to `enableUserLogin` and `enableUserForgotPassword`
 - Updated the bundled ALTCHA widget to 3.6.0, which now shows the details of network and server errors. Translate `widget.error` to show your own text for every error
 - The login and forgot-password toggles are now always visible on the Integrations settings page, because they work independently of the user registration toggle
+
+### Deprecated
+- Deprecated the `protectLogin` and `protectForgotPassword` settings. Use `enableUserLogin` and `enableUserForgotPassword` instead
 
 ### Fixed
 - Fixed a bug where a solved challenge could be accepted more than once if its payload was re-encoded

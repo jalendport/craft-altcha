@@ -65,7 +65,7 @@ class Altcha extends Plugin
      * @var string the plugin's schema version
      * @since 1.0.0
      */
-    public string $schemaVersion = '1.0.0';
+    public string $schemaVersion = '1.1.0';
 
     // Static Methods
     // =========================================================================

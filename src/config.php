@@ -37,8 +37,8 @@ return [
     'enableComments' => false,
     'enableContactForm' => false,
     'enableUserRegistration' => false,
-    'protectLogin' => false,
-    'protectForgotPassword' => false,
+    'enableUserLogin' => false,
+    'enableUserForgotPassword' => false,
     'enableGuestEntries' => false,
     'enableBlanketMode' => false,
 

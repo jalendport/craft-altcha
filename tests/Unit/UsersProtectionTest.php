@@ -13,8 +13,8 @@ function altchaUsersGate(bool $enableRegistration, mixed $userIdParam): bool
 {
     $settings = altchaSettings();
     $settings->enableUserRegistration = $enableRegistration;
-    $settings->protectLogin = false;
-    $settings->protectForgotPassword = false;
+    $settings->enableUserLogin = false;
+    $settings->enableUserForgotPassword = false;
 
     $service = new AltchaService();
     $service->setSettings($settings);

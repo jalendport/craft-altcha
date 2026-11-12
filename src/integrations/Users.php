@@ -95,8 +95,8 @@ class Users
 
         return match ($actionId) {
             'save-user' => $settings->enableUserRegistration && !$request->post('userId'),
-            'login' => $settings->protectLogin,
-            'send-password-reset-email' => $settings->protectForgotPassword,
+            'login' => $settings->enableUserLogin,
+            'send-password-reset-email' => $settings->enableUserForgotPassword,
             default => false,
         };
     }

@@ -10,6 +10,7 @@
 
 namespace jalendport\altcha\models;
 
+use Craft;
 use craft\base\Model;
 
 /**
@@ -24,6 +25,18 @@ use craft\base\Model;
  */
 class Settings extends Model
 {
+    // Const Properties
+    // =========================================================================
+
+    /**
+     * @var array<string, string> the deprecated setting names and their replacements
+     * @since 1.1.0
+     */
+    private const SETTING_ALIASES = [
+        'protectForgotPassword' => 'enableUserForgotPassword',
+        'protectLogin' => 'enableUserLogin',
+    ];
+
     // Public Properties
     // =========================================================================
 
@@ -73,6 +86,18 @@ class Settings extends Model
     public bool $enableGuestEntries = false;
 
     /**
+     * @var bool whether the native forgot-password form is protected
+     * @since 1.1.0
+     */
+    public bool $enableUserForgotPassword = false;
+
+    /**
+     * @var bool whether the native login form is protected
+     * @since 1.1.0
+     */
+    public bool $enableUserLogin = false;
+
+    /**
      * @var bool whether native user-registration forms are protected
      * @since 1.0.0
      */
@@ -84,18 +109,6 @@ class Settings extends Model
      * @since 1.0.0
      */
     public string $hmacKey = '';
-
-    /**
-     * @var bool whether the native forgot-password form is protected
-     * @since 1.0.0
-     */
-    public bool $protectForgotPassword = false;
-
-    /**
-     * @var bool whether the native login form is protected
-     * @since 1.0.0
-     */
-    public bool $protectLogin = false;
 
     /**
      * @var bool whether the plugin registers the Altcha widget script on the
@@ -141,6 +154,36 @@ class Settings extends Model
     // =========================================================================
 
     /**
+     * Returns whether the native forgot-password form is protected.
+     *
+     * @return bool whether the form requires a solution
+     * @deprecated in 1.1.0. Use [[enableUserForgotPassword]] instead.
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.1.0
+     */
+    public function getProtectForgotPassword(): bool
+    {
+        self::_logSettingAlias('protectForgotPassword');
+
+        return $this->enableUserForgotPassword;
+    }
+
+    /**
+     * Returns whether the native login form is protected.
+     *
+     * @return bool whether the form requires a solution
+     * @deprecated in 1.1.0. Use [[enableUserLogin]] instead.
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.1.0
+     */
+    public function getProtectLogin(): bool
+    {
+        self::_logSettingAlias('protectLogin');
+
+        return $this->enableUserLogin;
+    }
+
+    /**
      * @inheritdoc
      *
      * Normalizes `blanketActionAllowlist` on the way in, so the control panel's
@@ -152,11 +195,54 @@ class Settings extends Model
      */
     public function setAttributes($values, $safeOnly = true): void
     {
+        foreach (self::SETTING_ALIASES as $oldName => $newName) {
+            if (!is_array($values) || !array_key_exists($oldName, $values)) {
+                continue;
+            }
+
+            // Craft merges project config with config/altcha.php (the file wins)
+            // and calls setAttributes($settings, false). After the migration,
+            // only the config file can contain an old key, so the old key wins.
+            $values[$newName] = $values[$oldName];
+            unset($values[$oldName]);
+            self::_logSettingAlias($oldName);
+        }
+
         if (isset($values['blanketActionAllowlist'])) {
             $values['blanketActionAllowlist'] = self::_normalizeAllowlist($values['blanketActionAllowlist']);
         }
 
         parent::setAttributes($values, $safeOnly);
+    }
+
+    /**
+     * Sets whether the native forgot-password form is protected.
+     *
+     * @param bool $value whether the form requires a solution
+     * @return void
+     * @deprecated in 1.1.0. Use [[enableUserForgotPassword]] instead.
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.1.0
+     */
+    public function setProtectForgotPassword(bool $value): void
+    {
+        self::_logSettingAlias('protectForgotPassword');
+        $this->enableUserForgotPassword = $value;
+    }
+
+    /**
+     * Sets whether the native login form is protected.
+     *
+     * @param bool $value whether the form requires a solution
+     * @return void
+     * @deprecated in 1.1.0. Use [[enableUserLogin]] instead.
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.1.0
+     */
+    public function setProtectLogin(bool $value): void
+    {
+        self::_logSettingAlias('protectLogin');
+        $this->enableUserLogin = $value;
     }
 
     // Protected Methods
@@ -190,8 +276,8 @@ class Settings extends Model
                 'enableComments',
                 'enableContactForm',
                 'enableUserRegistration',
-                'protectLogin',
-                'protectForgotPassword',
+                'enableUserLogin',
+                'enableUserForgotPassword',
                 'enableGuestEntries',
                 'enableBlanketMode',
             ],
@@ -205,6 +291,27 @@ class Settings extends Model
 
     // Private Methods
     // =========================================================================
+
+    /**
+     * Logs use of a deprecated setting when a Craft application is available.
+     *
+     * @param string $oldName the deprecated setting name
+     * @return void
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.1.0
+     */
+    private static function _logSettingAlias(string $oldName): void
+    {
+        if (Craft::$app === null) {
+            return;
+        }
+
+        $newName = self::SETTING_ALIASES[$oldName];
+        Craft::$app->getDeprecator()->log(
+            "altcha.settings.$oldName",
+            "The Altcha $oldName setting is deprecated in 1.1.0. Use $newName instead."
+        );
+    }
 
     /**
      * Reduces a posted or configured allowlist to a list of trimmed, unique

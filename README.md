@@ -254,8 +254,8 @@ The event carries the `Comment` about to be saved as `$event->comment`. Setting 
 | `enableContactForm` | `false` | Whether messages sent through the Contact Form plugin require a solved challenge. |
 | `enableGuestEntries` | `false` | Whether entries submitted through the Guest Entries plugin require a solved challenge. |
 | `enableUserRegistration` | `false` | Whether Craft's front-end registration form requires a solved challenge. |
-| `protectLogin` | `false` | Whether Craft's front-end login form requires a solved challenge. |
-| `protectForgotPassword` | `false` | Whether Craft's front-end forgot-password form requires a solved challenge. |
+| `enableUserLogin` | `false` | Whether Craft's front-end login form requires a solved challenge. |
+| `enableUserForgotPassword` | `false` | Whether Craft's front-end forgot-password form requires a solved challenge. |
 | `enableBlanketMode` | `false` | Whether blanket mode enforces Altcha on the allowlisted action paths. |
 | `blanketActionAllowlist` | `[]` | The action paths blanket mode enforces Altcha on. Each is an exact `controller/action` path or a trailing-`*` wildcard, e.g. `['freeform/submit', 'campaign/forms/*']`. |
 | `widgetDisplay` | `'standard'` | The widget's display mode: `standard`, `bar`, `floating`, `overlay`, or `invisible`. Invisible solves in the background with no visible checkbox, so pair it with an auto-solve mode. |
@@ -263,6 +263,8 @@ The event carries the `Comment` about to be saved as `$event->comment`. Setting 
 | `widgetTheme` | _(empty)_ | The widget's color scheme: `light`, `dark`, or empty to follow the visitor's system preference. |
 | `widgetHideLogo` | `true` | Whether the ALTCHA logo inside the widget is hidden. |
 | `widgetHideFooter` | `true` | Whether the "Protected by ALTCHA" footer beneath the widget is hidden. |
+
+In 1.1.0, `protectLogin` and `protectForgotPassword` were renamed to `enableUserLogin` and `enableUserForgotPassword`. The old names still work but are deprecated.
 
 The plugin's three settings pages — **General Settings**, **Integrations**, and **Widget Options** — are admin-only, since the HMAC key lives on them.
 

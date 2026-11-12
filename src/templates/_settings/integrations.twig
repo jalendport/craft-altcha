@@ -54,19 +54,19 @@
 	{{ forms.lightswitchField({
 		label: 'Craft’s login form'|t('altcha'),
 		instructions: 'Requires a solved challenge on Craft’s front-end login form.'|t('altcha'),
-		name: 'protectLogin',
-		on: settings.protectLogin,
-		disabled: readOnly or 'protectLogin' in overrides,
-		warning: base.configWarning('protectLogin', 'altcha'),
+		name: 'enableUserLogin',
+		on: settings.enableUserLogin,
+		disabled: readOnly or 'enableUserLogin' in overrides or 'protectLogin' in overrides,
+		warning: base.configWarning('enableUserLogin', 'altcha') ?: base.configWarning('protectLogin', 'altcha'),
 	}) }}
 
 	{{ forms.lightswitchField({
 		label: 'Craft’s forgot-password form'|t('altcha'),
 		instructions: 'Requires a solved challenge on Craft’s front-end password reset form.'|t('altcha'),
-		name: 'protectForgotPassword',
-		on: settings.protectForgotPassword,
-		disabled: readOnly or 'protectForgotPassword' in overrides,
-		warning: base.configWarning('protectForgotPassword', 'altcha'),
+		name: 'enableUserForgotPassword',
+		on: settings.enableUserForgotPassword,
+		disabled: readOnly or 'enableUserForgotPassword' in overrides or 'protectForgotPassword' in overrides,
+		warning: base.configWarning('enableUserForgotPassword', 'altcha') ?: base.configWarning('protectForgotPassword', 'altcha'),
 	}) }}
 
 	{% if plugins.isPluginEnabled('formie') %}

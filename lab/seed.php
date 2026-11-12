@@ -72,8 +72,8 @@ return [
     'enableComments' => true,
     'enableContactForm' => true,
     'enableUserRegistration' => true,
-    'protectLogin' => true,
-    'protectForgotPassword' => true,
+    'enableUserLogin' => true,
+    'enableUserForgotPassword' => true,
     'enableGuestEntries' => true,
 
     // The allowlist stays disjoint from the integration-covered actions: a
