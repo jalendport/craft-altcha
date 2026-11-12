@@ -41,7 +41,7 @@ return [
     'Guest Entries' => 'Guest Entries',
     'Requires a solved challenge on entries submitted through the Guest Entries plugin.' => 'Requires a solved challenge on entries submitted through the Guest Entries plugin.',
     'User registration' => 'User registration',
-    'Requires a solved challenge on Craft’s own front-end registration form.' => 'Requires a solved challenge on Craft’s own front-end registration form.',
+    'Requires a solved challenge on Craft’s front-end registration form.' => 'Requires a solved challenge on Craft’s front-end registration form.',
     'Protect the login form' => 'Protect the login form',
     'Requires a solved challenge on Craft’s front-end login form.' => 'Requires a solved challenge on Craft’s front-end login form.',
     'Protect the forgot-password form' => 'Protect the forgot-password form',

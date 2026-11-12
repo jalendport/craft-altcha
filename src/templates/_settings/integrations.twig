@@ -44,7 +44,7 @@
 
 	{{ forms.lightswitchField({
 		label: 'User registration'|t('altcha'),
-		instructions: 'Requires a solved challenge on Craft’s own front-end registration form.'|t('altcha'),
+		instructions: 'Requires a solved challenge on Craft’s front-end registration form.'|t('altcha'),
 		name: 'enableUserRegistration',
 		on: settings.enableUserRegistration,
 		disabled: readOnly or 'enableUserRegistration' in overrides,
