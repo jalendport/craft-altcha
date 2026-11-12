@@ -46,6 +46,7 @@ return [
     'Requires a solved challenge on Craft’s front-end login form.' => 'Requires a solved challenge on Craft’s front-end login form.',
     'Craft’s forgot-password form' => 'Craft’s forgot-password form',
     'Requires a solved challenge on Craft’s front-end password reset form.' => 'Requires a solved challenge on Craft’s front-end password reset form.',
+    'Formie' => 'Formie',
     'Formie forms are protected from Formie’s own captcha settings, not here.' => 'Formie forms are protected from Formie’s own captcha settings, not here.',
     'Blanket mode' => 'Blanket mode',
     'Requires a solved challenge on any front-end POST to the action paths you list below. Use this for form plugins with no integration of their own, such as Freeform and Campaign.' => 'Requires a solved challenge on any front-end POST to the action paths you list below. Use this for form plugins with no integration of their own, such as Freeform and Campaign.',

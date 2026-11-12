@@ -11,8 +11,16 @@
 	{% set plugins = craft.app.plugins %}
 	{% set missingPluginNote = 'This integration stays dormant until the plugin it protects is installed and enabled.'|t('altcha') %}
 
+	{% if plugins.isPluginEnabled('formie') %}
+		{{ forms.field({
+			first: true,
+			label: 'Formie'|t('altcha'),
+			instructions: 'Formie forms are protected from Formie’s own captcha settings, not here.'|t('altcha'),
+		}, '') }}
+	{% endif %}
+
 	{{ forms.lightswitchField({
-		first: true,
+		first: not plugins.isPluginEnabled('formie'),
 		label: 'Comments'|t('altcha'),
 		instructions: 'Requires a solved challenge on front-end comments submitted through the Comments plugin.'|t('altcha'),
 		name: 'enableComments',
@@ -68,10 +76,6 @@
 		disabled: readOnly or 'enableUserForgotPassword' in overrides or 'protectForgotPassword' in overrides,
 		warning: base.configWarning('enableUserForgotPassword', 'altcha') ?: base.configWarning('protectForgotPassword', 'altcha'),
 	}) }}
-
-	{% if plugins.isPluginEnabled('formie') %}
-		<p class="light">{{ 'Formie forms are protected from Formie’s own captcha settings, not here.'|t('altcha') }}</p>
-	{% endif %}
 
 	<hr>
 
