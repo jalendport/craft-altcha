@@ -33,6 +33,7 @@ class WidgetAsset extends AssetBundle
 
     /**
      * @inheritdoc
+     * @since 1.0.0
      */
     public $js = [
         // The widget is an ES module custom element; deferring keeps it from
@@ -42,6 +43,7 @@ class WidgetAsset extends AssetBundle
 
     /**
      * @inheritdoc
+     * @since 1.0.0
      */
     public $jsOptions = [
         'position' => View::POS_HEAD,
@@ -49,6 +51,7 @@ class WidgetAsset extends AssetBundle
 
     /**
      * @inheritdoc
+     * @since 1.0.0
      */
-    public $sourcePath = __DIR__ . '/dist';
+    public $sourcePath = '@jalendport/altcha/web/assets/widget/dist';
 }

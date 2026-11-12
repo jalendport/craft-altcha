@@ -28,13 +28,18 @@ class ChallengeController extends Controller
 
     /**
      * @inheritdoc
+     * @since 1.0.0
      */
     public $defaultAction = 'index';
 
+    // Protected Properties
+    // =========================================================================
+
     /**
      * @inheritdoc
+     * @since 1.0.0
      */
-    protected array|int|bool $allowAnonymous = true;
+    protected array|int|bool $allowAnonymous = ['index'];
 
     // Public Methods
     // =========================================================================
