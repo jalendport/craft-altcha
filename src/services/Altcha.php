@@ -404,7 +404,7 @@ class Altcha extends Component
         // through between expiry and cache eviction.
         $duration = $this->getSettings()->challengeExpiryMinutes * 60 + 300;
 
-        if (!$this->getCache()->add($cacheKey, 1, duration: $duration)) {
+        if (!$this->getCache()->add($cacheKey, 1, $duration)) {
             AltchaPlugin::info('Altcha rejected a replayed solution.');
             return false;
         }
