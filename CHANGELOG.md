@@ -8,11 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Unreleased
 
 ### Added
-- Added ALTCHA’s translations to the bundled widget, which now follows the page’s language ([#1](https://github.com/jalendport/craft-altcha/issues/1))
+- Added ALTCHA’s translations to the bundled widget, which now uses the current site’s language ([#1](https://github.com/jalendport/craft-altcha/issues/1))
 - Added support for overriding the widget’s text from the site’s `altcha` translation files ([#1](https://github.com/jalendport/craft-altcha/issues/1))
 
 ### Changed
-- Updated the bundled ALTCHA widget to 3.6.0
+- Updated the bundled ALTCHA widget to 3.6.0, which now shows the details of network and server errors. Translate `widget.error` to show your own text for every error
 
 ## 1.0.0 - 2026-07-22
 

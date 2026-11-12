@@ -185,6 +185,13 @@ class Altcha extends Component
      * so any widget attribute the vendored script understands can be passed
      * through without a code change here.
      *
+     * The widget language defaults to the Craft application language. Site
+     * translations for that language override one complete ALTCHA language
+     * entry, matched by full code, primary subtag, or English. One inline
+     * script is registered per language, even when widget JS is loaded by the
+     * site. An application-language error override also sets the shared error
+     * formatter to show the widget's error text for every error.
+     *
      * @param array<string, mixed> $options the widget attribute overrides,
      * which win over the configured defaults
      * @return Markup the rendered widget
@@ -207,11 +214,17 @@ class Altcha extends Component
             $view->registerAssetBundle(WidgetAsset::class);
         }
 
+        $language = $options['language'] ?? null;
+
+        if (!is_string($language) || $language === '') {
+            $language = Craft::$app->language;
+        }
+
         $overrides = [];
 
         foreach (self::WIDGET_STRING_KEYS as $key) {
             $message = 'widget.' . $key;
-            $translation = Craft::t('altcha', $message);
+            $translation = Craft::t('altcha', $message, [], $language);
 
             if ($translation !== $message && $translation !== '') {
                 $overrides[$key] = $translation;
@@ -220,6 +233,11 @@ class Altcha extends Component
 
         if ($overrides !== []) {
             $strings = Json::htmlEncode($overrides);
+            $languageCode = strtolower($language);
+            $encodedLanguage = Json::htmlEncode($languageCode);
+            $formatError = Json::htmlEncode(
+                $languageCode === strtolower(Craft::$app->language) && isset($overrides['error']),
+            );
             $view->registerJs(<<<JS
                 customElements.whenDefined('altcha-widget').then(() => {
                     if (!globalThis.\$altcha) {
@@ -230,12 +248,18 @@ class Altcha extends Component
                     let languages;
                     const unsubscribe = i18n.store.subscribe(value => { languages = value; });
                     unsubscribe();
-                    const overrides = {$strings};
-                    i18n.set(Object.fromEntries(Object.entries(languages).map(([language, text]) => [
-                        language, { ...text, ...overrides },
-                    ])));
+                    const language = {$encodedLanguage};
+                    const primary = language.split('-')[0];
+                    const base = languages[language]
+                        ?? languages[Object.keys(languages).find(code => code.split('-')[0] === primary)]
+                        ?? languages.en;
+                    i18n.set(language, { ...base, ...{$strings} });
+
+                    if ({$formatError}) {
+                        globalThis.\$altcha.defaults.set({ formatError: () => null });
+                    }
                 });
-                JS, View::POS_END, 'altcha-widget-strings');
+                JS, View::POS_END, 'altcha-widget-strings-' . $languageCode);
         }
 
         $oldTemplatesPath = $view->getTemplatesPath();
@@ -384,6 +408,9 @@ class Altcha extends Component
      * they only exist as configuration properties — so they travel in the
      * JSON-encoded `configuration` attribute.
      *
+     * The language attribute defaults to the Craft application language;
+     * a per-call language option takes precedence.
+     *
      * @param array<string, mixed> $options the per-call attribute overrides
      * @return array<string, mixed> the attributes to render
      * @author Jalen Davenport <hello@jalendport.com>
@@ -395,6 +422,7 @@ class Altcha extends Component
 
         $attributes = [
             'challenge' => $this->getChallengeUrl(),
+            'language' => Craft::$app->language,
             // Every server-side check reads the payload under this name.
             'name' => 'altcha',
         ];

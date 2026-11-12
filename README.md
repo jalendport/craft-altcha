@@ -93,7 +93,7 @@ Two of the plugin's settings — hiding the ALTCHA logo and hiding the widget fo
 
 #### Widget language
 
-The bundled widget includes ALTCHA’s translations. It uses the `language` option first, then `<html lang>`, then the browser languages, with English as the fallback. A regional language code also matches its primary language, so `de-AT` uses German.
+The bundled widget includes ALTCHA’s translations and uses the current site’s language. A regional language code also matches its primary language, so `de-AT` uses German. English is the fallback when ALTCHA has no translation.
 
 To force a language for one form, pass the `language` option:
 
@@ -113,11 +113,15 @@ return [
 ];
 ```
 
-The plugin reads these entries in the current site language. A string with no translation, or an empty translation, keeps ALTCHA’s own translation. An English site uses `translations/en/altcha.php` to change the English words.
+The plugin reads these entries in the widget’s language. A widget with a different `language` option uses that language’s translation file. A string with no translation, or an empty translation, keeps ALTCHA’s own translation. This also works for a language that ALTCHA does not have; strings with no translation stay English. An English widget uses `translations/en/altcha.php` to change the English words.
 
 The 17 message keys are `widget.ariaLinkLabel`, `widget.cancel`, `widget.enterCode`, `widget.enterCodeAria`, `widget.enterCodeFromImage`, `widget.error`, `widget.expired`, `widget.footer`, `widget.getAudioChallenge`, `widget.label`, `widget.loading`, `widget.reload`, `widget.verify`, `widget.verificationRequired`, `widget.verified`, `widget.verifying`, and `widget.waitAlert`. The `widget.footer` string is HTML; the other strings are text.
 
-These overrides apply to every widget on the page, including Formie forms. The strings use one shared store on the page, so they cannot be set per call to `renderWidget()`. They also apply when you load the ALTCHA script yourself with `registerWidgetJs` set to `false`.
+These overrides apply to widgets with the same language, including Formie forms. They also apply when you load the ALTCHA script yourself with `registerWidgetJs` set to `false`. The overrides use an inline script, so a site with a strict Content Security Policy must permit it.
+
+#### Widget errors
+
+By default, visitors see network and server errors as `Error: <message>`, such as `Error: Server responded with 500.` Other errors use the widget’s error text. When the site translates `widget.error`, the widget shows that text for every error. For other behaviour, call `configure({ formatError })` on the widget element in your own JavaScript.
 
 ### Formie
 
