@@ -61,6 +61,12 @@ class Altcha extends Plugin
     public bool $hasCpSettings = true;
 
     /**
+     * @var bool whether the plugin has read-only settings in the control panel
+     * @since 1.1.1
+     */
+    public bool $hasReadOnlyCpSettings = true;
+
+    /**
      * @var string the oldest version this plugin can be updated from
      * @since 1.1.0
      */
@@ -117,6 +123,17 @@ class Altcha extends Plugin
         Craft::$app->onInit(function() {
             $this->integrations->addAll();
         });
+    }
+
+    /**
+     * @inheritdoc
+     * @throws InvalidRouteException if the settings route can't be resolved
+     * @author Jalen Davenport <hello@jalendport.com>
+     * @since 1.1.1
+     */
+    public function getReadOnlySettingsResponse(): mixed
+    {
+        return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('settings/altcha'));
     }
 
     /**
